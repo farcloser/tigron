@@ -89,7 +89,7 @@ func (help *helpersInternal) Capture(args ...string) string {
 	return ret
 }
 
-// Capture will run a command, ensure it is successful and return stdout.
+// Err will run a command with no expectation and return Stderr.
 func (help *helpersInternal) Err(args ...string) string {
 	cmd := help.Command(args...)
 	cmd.Run(nil)

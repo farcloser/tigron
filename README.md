@@ -1,6 +1,8 @@
 # Tigron
 
-A modern integration-test framework for cli binaries.
+>  no-one likes you, `if [ $? -eq 0 ]`
+
+A modern testing framework for command-line applications.
 
 ## TL;DR
 
@@ -22,7 +24,7 @@ shell scripts), and routinely require additional third-party tools for advanced 
 
 Projects and companies thus routinely end-up growing in-house tooling, that generally suffer from lack
 of structure and expressiveness, ultimately encouraging bad test design while
-overlooking important aspects (like teardowns), leading to largely degraded and unscalable situations 
+overlooking important aspects (like tear down), leading to largely degraded and unscalable situations
 (flakyness being of course the number 1 scourge).
 
 Tigron was developed specifically to address these issues, from the experience of testing

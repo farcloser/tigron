@@ -84,9 +84,7 @@ type (
 
 // Config is meant to hold information relevant to the binary (eg: flags defining certain behaviors, etc.)
 type Config interface {
-	// Write
 	Write(key ConfigKey, value ConfigValue) Config
-	// Read
 	Read(key ConfigKey) ConfigValue
 }
 
@@ -101,7 +99,6 @@ type TestableCommand interface {
 	WithArgs(args ...string)
 	// WithWrapper allows wrapping a command with another command (for example: `time`, `unbuffer`)
 	WithWrapper(binary string, args ...string)
-	// WithPseudoTTY
 	WithPseudoTTY()
 	// WithStdin allows passing a reader to be used for stdin for the command
 	WithStdin(r io.Reader)
@@ -121,7 +118,6 @@ type TestableCommand interface {
 	Stderr() string
 }
 
-// /////////////////////////////////////////////
 // CustomizableCommand is an interface meant for people who want to heavily customize the base command
 // of their test case. It is passed along.
 type CustomizableCommand interface {

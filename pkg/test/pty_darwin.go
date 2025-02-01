@@ -1,5 +1,21 @@
 //go:build darwin
 
+/*
+   Copyright Farcloser.
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+
 package test
 
 import (
@@ -11,20 +27,16 @@ import (
 
 // Originally from https://github.com/creack/pty/tree/2cde18bfb702199728dd43bf10a6c15c7336da0a
 
-//nolint:revive,stylecheck
 const (
-	_IOC_PARAM_SHIFT = 13
-	_IOC_PARAM_MASK  = (1 << _IOC_PARAM_SHIFT) - 1
+	ioctlParamShift = 13
+	ioctlParamMask  = (1 << ioctlParamShift) - 1
 )
 
-var (
-	errNotNULTerminated = errors.New("TIOCPTYGNAME string not NUL-terminated")
-)
+var errNotNULTerminated = errors.New("TIOCPTYGNAME string not NUL-terminated")
 
-//nolint:revive,stylecheck
-func _IOC_PARM_LEN(ioctl uintptr) uintptr {
+func ioctlParmLen(ioctl uintptr) uintptr {
 	//nolint:mnd
-	return (ioctl >> 16) & _IOC_PARAM_MASK
+	return (ioctl >> 16) & ioctlParamMask
 }
 
 func Open() (pty, tty *os.File, err error) {
@@ -45,7 +57,7 @@ func Open() (pty, tty *os.File, err error) {
 
 	pty = os.NewFile(uintptr(pFD), "/dev/ptmx")
 
-	npoint := make([]byte, _IOC_PARM_LEN(syscall.TIOCPTYGNAME))
+	npoint := make([]byte, ioctlParmLen(syscall.TIOCPTYGNAME))
 
 	err = ioctl(pty, syscall.TIOCPTYGNAME, uintptr(unsafe.Pointer(&npoint[0])))
 	if err != nil {
