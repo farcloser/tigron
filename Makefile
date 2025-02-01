@@ -91,7 +91,6 @@ lint-commits:
 
 lint-headers:
 	$(call title, $@)
-	# Force verbose, as otherwise it is useless
 	@cd $(MAKEFILE_DIR) && ltag -t "./hack/headers" --check -v
 	$(call footer, $@)
 

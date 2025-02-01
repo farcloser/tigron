@@ -1,0 +1,48 @@
+name: test
+
+on:
+  push:
+    branches:
+      - main
+      - 'release/**'
+  pull_request:
+    paths-ignore:
+      - '**.md'
+
+jobs:
+  build-dependencies:
+    timeout-minutes: 10
+    defaults:
+      run:
+        shell: bash
+    name: unit | ${{ matrix.runner }} | ${{ matrix.goversion }}
+    runs-on: "${{ matrix.runner }}"
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: windows-2022
+            goversion: latest-stable
+          - runner: macos-14
+            goversion: latest-stable
+          - runner: ubuntu-24.04
+            goversion: latest-stable
+          - runner: ubuntu-24.04
+            goversion: canary
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          fetch-depth: 1
+      - name: "Install go"
+        uses: ./.github/actions/install-go
+        with:
+          strategy: ${{ matrix.goversion }}
+      - name: "test-unit"
+        run: |
+          make test-unit
+      - name: "race-unit"
+        run: |
+          make race-unit
+      - name: "bench-unit"
+        run: |
+          make bench-unit
