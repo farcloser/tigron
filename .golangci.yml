@@ -1,0 +1,46 @@
+---
+run:
+  # If it is explicitly set to 0 (i.e. not the default) then golangci-lint will automatically set the value to match Linux container CPU quota.
+  concurrency: 0
+  timeout: 5m
+  issues-exit-code: 2
+  tests: true
+  # build-tags:
+  #  - mytag
+  modules-download-mode: readonly
+  allow-parallel-runners: true
+  allow-serial-runners: true
+  # FIXME @apostasie: it does not seem to read go.mod... so, for now, duplicating here
+  go: '1.22'
+
+linters:
+  disable-all: false
+  enable-all: true
+  disable:
+    # I like namedreturns occasionally
+    - nonamedreturns
+    # Deprecated
+    - exportloopref
+    # Too annoying
+    - exhaustruct  # this is fine without, usually
+    - funlen  # somewhat ridiculous
+    - cyclop  # who cares! :D
+    - godox  # just leave it alone
+    # TODO(apostasie) Temporary out until we wrap up all of them
+    - wrapcheck
+
+    # We us go-imports instead
+    - gci
+
+linters-settings:
+  staticcheck:
+    checks:
+      - "all"
+
+  depguard:
+    rules:
+      main:
+        files:
+          - "$all"
+        allow:
+          - $gostd
