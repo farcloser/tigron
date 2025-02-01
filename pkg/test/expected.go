@@ -25,7 +25,7 @@ import (
 	"gotest.tools/v3/assert"
 )
 
-// RunCommand is the simplest way to express a test.TestableCommand for very basic cases
+// Command is the simplest way to express a test.TestableCommand for very basic cases
 // where access to test data is not necessary.
 func Command(args ...string) Executor {
 	return func(_ Data, helpers Helpers) TestableCommand {
@@ -87,8 +87,8 @@ func Equals(compare string) Comparator {
 	}
 }
 
-// Provisional - expected use, but have not seen it so far
 // Match is to be used for expected.Output to ensure we match a regexp.
+// Provisional - expected use, but have not seen it so far.
 func Match(reg *regexp.Regexp) Comparator {
 	//nolint:thelper
 	return func(stdout string, info string, t *testing.T) {
