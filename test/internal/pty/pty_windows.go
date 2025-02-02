@@ -14,11 +14,12 @@
    limitations under the License.
 */
 
-package test
+package pty
 
-import "errors"
-
-var (
-	ErrPTYFailure             = errors.New("pty failure")
-	ErrPTYUnsupportedPlatform = errors.New("pty not supported on this platform")
+import (
+	"os"
 )
+
+func Open() (pty, tty *os.File, err error) {
+	return nil, nil, ErrUnsupportedPlatform
+}

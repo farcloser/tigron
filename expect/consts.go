@@ -14,22 +14,9 @@
    limitations under the License.
 */
 
-package test
+package expect
 
-import (
-	"testing"
+const (
+	ExitCodeGenericFail = -1
+	ExitCodeNoCheck     = -2
 )
-
-type Testable interface {
-	CustomCommand(testCase *Case, t *testing.T) CustomizableCommand
-	AmbientRequirements(testCase *Case, t *testing.T)
-}
-
-// FIXME
-//
-//nolint:gochecknoglobals
-var registeredTestable Testable
-
-func Customize(testable Testable) {
-	registeredTestable = testable
-}

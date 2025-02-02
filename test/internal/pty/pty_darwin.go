@@ -1,3 +1,5 @@
+//go:build darwin
+
 /*
    Copyright Farcloser.
 
@@ -14,17 +16,28 @@
    limitations under the License.
 */
 
-package test
+package pty
 
 import (
 	"errors"
 	"os"
-	"strconv"
 	"syscall"
 	"unsafe"
 )
 
 // Originally from https://github.com/creack/pty/tree/2cde18bfb702199728dd43bf10a6c15c7336da0a
+
+const (
+	ioctlParamShift = 13
+	ioctlParamMask  = (1 << ioctlParamShift) - 1
+)
+
+var errNotNULTerminated = errors.New("TIOCPTYGNAME string not NUL-terminated")
+
+func ioctlParmLen(ioctl uintptr) uintptr {
+	//nolint:mnd
+	return (ioctl >> 16) & ioctlParamMask
+}
 
 func Open() (pty, tty *os.File, err error) {
 	defer func() {
@@ -33,26 +46,43 @@ func Open() (pty, tty *os.File, err error) {
 				err = errors.Join(pty.Close(), err)
 			}
 
-			err = errors.Join(ErrPTYFailure, err)
+			err = errors.Join(ErrFailure, err)
 		}
 	}()
 
-	pty, err = os.OpenFile("/dev/ptmx", os.O_RDWR, 0)
+	pFD, err := syscall.Open("/dev/ptmx", syscall.O_RDWR|syscall.O_CLOEXEC, 0)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	var npoint uint32
+	pty = os.NewFile(uintptr(pFD), "/dev/ptmx")
 
-	err = ioctl(pty, syscall.TIOCGPTN, uintptr(unsafe.Pointer(&npoint)))
+	npoint := make([]byte, ioctlParmLen(syscall.TIOCPTYGNAME))
+
+	err = ioctl(pty, syscall.TIOCPTYGNAME, uintptr(unsafe.Pointer(&npoint[0])))
 	if err != nil {
 		return nil, nil, err
 	}
 
-	sname := "/dev/pts/" + strconv.Itoa(int(npoint))
+	sname := ""
 
-	var u int32
-	if err = ioctl(pty, syscall.TIOCSPTLCK, uintptr(unsafe.Pointer(&u))); err != nil {
+	for i, c := range npoint {
+		if c == 0 {
+			sname = string(npoint[:i])
+
+			break
+		}
+	}
+
+	if sname == "" {
+		return nil, nil, errNotNULTerminated
+	}
+
+	if err = ioctl(pty, syscall.TIOCPTYGRANT, 0); err != nil {
+		return nil, nil, err
+	}
+
+	if err = ioctl(pty, syscall.TIOCPTYUNLK, 0); err != nil {
 		return nil, nil, err
 	}
 

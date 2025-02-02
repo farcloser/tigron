@@ -14,22 +14,27 @@
    limitations under the License.
 */
 
-package test
+package expect_test
 
 import (
+	"regexp"
 	"testing"
+
+	"go.farcloser.world/tigron/expect"
 )
 
-type Testable interface {
-	CustomCommand(testCase *Case, t *testing.T) CustomizableCommand
-	AmbientRequirements(testCase *Case, t *testing.T)
-}
+func TestExpect(t *testing.T) {
+	t.Parallel()
 
-// FIXME
-//
-//nolint:gochecknoglobals
-var registeredTestable Testable
+	expect.Contains("b")("a b c", "info", t)
+	expect.DoesNotContain("d")("a b c", "info", t)
+	expect.Equals("a b c")("a b c", "info", t)
+	expect.Match(regexp.MustCompile("[a-z ]+"))("a b c", "info", t)
 
-func Customize(testable Testable) {
-	registeredTestable = testable
+	expect.All(
+		expect.Contains("b"),
+		expect.DoesNotContain("d"),
+		expect.Equals("a b c"),
+		expect.Match(regexp.MustCompile("[a-z ]+")),
+	)("a b c", "info", t)
 }
