@@ -14,12 +14,9 @@
    limitations under the License.
 */
 
-package test
+package internal
 
-import (
-	"os"
+const (
+	ExitCodeGenericFail = -1
+	ExitCodeNoCheck     = -2
 )
-
-func Open() (pty, tty *os.File, err error) {
-	return nil, nil, ErrPTYUnsupportedPlatform
-}

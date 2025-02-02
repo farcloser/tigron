@@ -14,22 +14,11 @@
    limitations under the License.
 */
 
-package test
+package pty
 
-import (
-	"testing"
+import "errors"
+
+var (
+	ErrFailure             = errors.New("pty failure")
+	ErrUnsupportedPlatform = errors.New("pty not supported on this platform")
 )
-
-type Testable interface {
-	CustomCommand(testCase *Case, t *testing.T) CustomizableCommand
-	AmbientRequirements(testCase *Case, t *testing.T)
-}
-
-// FIXME
-//
-//nolint:gochecknoglobals
-var registeredTestable Testable
-
-func Customize(testable Testable) {
-	registeredTestable = testable
-}
