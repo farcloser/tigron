@@ -119,15 +119,19 @@ func defaultIdentifierHashing(names ...string) string {
 	safeName := regexp.MustCompile(`[^a-z0-9-]+`)
 	// And we avoid repeats of the separator
 	noRepeat := regexp.MustCompile(fmt.Sprintf(`[%s]{2,}`, replaceWith))
-	sn := safeName.ReplaceAll([]byte(name), replaceWith)
-	sn = noRepeat.ReplaceAll(sn, replaceWith)
-
+	escapedName := safeName.ReplaceAll([]byte(name), replaceWith)
+	escapedName = noRepeat.ReplaceAll(escapedName, replaceWith)
 	// Do not allow trailing or leading dash (as that may stutter)
-	name = strings.Trim(string(sn), string(replaceWith))
+	name = strings.Trim(string(escapedName), string(replaceWith))
+
 	// Ensure we will never go above 76 characters in length (with signature)
 	if len(name) > (identifierMaxLength - len(signature)) {
 		name = name[0:67]
 	}
 
-	return name + "-" + signature
+	if name[len(name)-1:] != "=" {
+		signature = "-" + signature
+	}
+
+	return name + signature
 }
