@@ -11,7 +11,7 @@ run:
   allow-parallel-runners: true
   allow-serial-runners: true
   # FIXME @apostasie: it does not seem to read go.mod... so, for now, duplicating here
-  go: '1.22'
+  go: '1.23'
 
 linters:
   disable-all: false
