@@ -129,7 +129,7 @@ func defaultIdentifierHashing(names ...string) string {
 		name = name[0:67]
 	}
 
-	if name[len(name)-1:] != "=" {
+	if name[len(name)-1:] != "-" {
 		signature = "-" + signature
 	}
 
