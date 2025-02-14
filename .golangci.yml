@@ -19,8 +19,7 @@ linters:
   disable:
     # I like namedreturns occasionally
     - nonamedreturns
-    # Deprecated
-    - exportloopref
+    - tenv
     # Too annoying
     - exhaustruct  # this is fine without, usually
     - funlen  # somewhat ridiculous

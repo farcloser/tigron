@@ -33,13 +33,15 @@ type helpersInternal struct {
 // Ensure will run a command and make sure it is successful.
 func (help *helpersInternal) Ensure(args ...string) {
 	help.Command(args...).Run(&Expected{
-		ExitCode: 0,
+		ExitCode: internal.ExitCodeSuccess,
 	})
 }
 
 // Anyhow will run a command regardless of outcome (may or may not fail).
 func (help *helpersInternal) Anyhow(args ...string) {
-	help.Command(args...).Run(nil)
+	help.Command(args...).Run(&Expected{
+		ExitCode: internal.ExitCodeNoCheck,
+	})
 }
 
 // Fail will run a command and make sure it does fail.
