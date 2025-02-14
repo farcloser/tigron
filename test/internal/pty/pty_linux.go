@@ -27,6 +27,7 @@ import (
 // Originally from https://github.com/creack/pty/tree/2cde18bfb702199728dd43bf10a6c15c7336da0a
 
 func Open() (pty, tty *os.File, err error) {
+	// Wrap errors
 	defer func() {
 		if err != nil {
 			if pty != nil {
@@ -37,38 +38,35 @@ func Open() (pty, tty *os.File, err error) {
 		}
 	}()
 
+	// Open the pty
 	pty, err = os.OpenFile("/dev/ptmx", os.O_RDWR, 0)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	var npoint uint32
+	// Get the slave unit number
+	var unitNumber uint32
 
-	err = ioctl(pty, syscall.TIOCGPTN, uintptr(unsafe.Pointer(&npoint)))
-	if err != nil {
-		return nil, nil, err
+	_, _, sysErr := syscall.Syscall(syscall.SYS_IOCTL, pty.Fd(), syscall.TIOCGPTN, uintptr(unsafe.Pointer(&unitNumber)))
+	if sysErr != 0 {
+		return nil, nil, sysErr
 	}
 
-	sname := "/dev/pts/" + strconv.Itoa(int(npoint))
+	sname := "/dev/pts/" + strconv.Itoa(int(unitNumber))
 
+	// Unlock
 	var u int32
-	if err = ioctl(pty, syscall.TIOCSPTLCK, uintptr(unsafe.Pointer(&u))); err != nil {
-		return nil, nil, err
+
+	_, _, sysErr = syscall.Syscall(syscall.SYS_IOCTL, pty.Fd(), syscall.TIOCSPTLCK, uintptr(unsafe.Pointer(&u)))
+	if sysErr != 0 {
+		return nil, nil, sysErr
 	}
 
+	// Open the slave, preventing it from becoming the controlling terminal
 	tty, err = os.OpenFile(sname, os.O_RDWR|syscall.O_NOCTTY, 0)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	return pty, tty, nil
-}
-
-func ioctl(f *os.File, cmd, ptr uintptr) error {
-	_, _, e := syscall.Syscall(syscall.SYS_IOCTL, f.Fd(), cmd, ptr)
-	if e != 0 {
-		return e
-	}
-
-	return nil
 }

@@ -144,15 +144,15 @@ up:
 		&& go get -u ./...
 	$(call footer, $@)
 
-install-linters:
+install-dev-tools:
 	$(call title, $@)
-	# golangci: v1.62.2
+	# golangci: v1.64.5
 	# git-validation: main from 2023/11
 	# ltag: v0.2.5
 	# go-licenses: v2.0.0-alpha.1
 	# goimports-reviser: v3.8.2
 	@cd $(MAKEFILE_DIR) \
-		&& go install github.com/golangci/golangci-lint/cmd/golangci-lint@89476e7a1eaa0a8a06c17343af960a5fd9e7edb7 \
+		&& go install github.com/golangci/golangci-lint/cmd/golangci-lint@0a603e49e5e9870f5f9f2035bcbe42cd9620a9d5 \
 		&& go install github.com/vbatts/git-validation@679e5cad8c50f1605ab3d8a0a947aaf72fb24c07 \
 		&& go install github.com/kunalkushwaha/ltag@b0cfa33e4cc9383095dc584d3990b62c95096de0 \
 		&& go install github.com/google/go-licenses/v2@d01822334fba5896920a060f762ea7ecdbd086e8 \
@@ -175,7 +175,7 @@ race-unit:
 	$(call footer, $@)
 
 .PHONY: lint lint-commits lint-go lint-go-all lint-headers lint-imports lint-licenses lint-licenses-all lint-mod lint-shell lint-yaml \
-	install-linters \
+	install-dev-tools \
 	fix fix-go fix-imports fix-mod \
 	update \
 	test test-unit race-unit bench-unit \

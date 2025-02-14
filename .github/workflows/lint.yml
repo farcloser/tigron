@@ -41,8 +41,8 @@ jobs:
           strategy: ${{ matrix.goversion }}
       - name: "Install golangci"
         run: |
-          echo "::group:: make lint-install-linters"
-          make install-linters
+          echo "::group:: make lint-install-dev-tools"
+          make install-dev-tools
           echo "::endgroup::"
       - name: "`make lint`"
         env:

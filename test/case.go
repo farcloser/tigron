@@ -161,7 +161,9 @@ func (test *Case) Run(t *testing.T) {
 		}
 
 		// Execute cleanups now
+		test.t.Log("")
 		test.t.Log("======================== Pre-test cleanup ========================")
+		test.t.Log("")
 
 		for _, cleanup := range cleanups {
 			cleanup(test.Data, test.helpers)
@@ -169,7 +171,9 @@ func (test *Case) Run(t *testing.T) {
 
 		// Register the cleanups, in reverse
 		test.t.Cleanup(func() {
+			test.t.Log("")
 			test.t.Log("======================== Post-test cleanup ========================")
+			test.t.Log("")
 
 			slices.Reverse(cleanups)
 
@@ -179,7 +183,9 @@ func (test *Case) Run(t *testing.T) {
 		})
 
 		// Run the setups
+		test.t.Log("")
 		test.t.Log("======================== Test setup ========================")
+		test.t.Log("")
 
 		for _, setup := range setups {
 			setup(test.Data, test.helpers)
@@ -187,14 +193,18 @@ func (test *Case) Run(t *testing.T) {
 
 		// Run the command if any, with expectations
 		// Note: if we have a command, we already know we DO have Expected
+		test.t.Log("")
 		test.t.Log("======================== Test Run ========================")
+		test.t.Log("")
 
 		if test.Command != nil {
 			test.Command(test.Data, test.helpers).Run(test.Expected(test.Data, test.helpers))
 		}
 
 		// Now go for the subtests
+		test.t.Log("")
 		test.t.Log("======================== Processing subtests ========================")
+		test.t.Log("")
 
 		for _, subTest := range test.SubTests {
 			subTest.parent = test

@@ -17,6 +17,7 @@
 package test
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"os"
@@ -24,6 +25,8 @@ import (
 	"testing"
 	"time"
 
+	"golang.org/x/sync/errgroup"
+	"golang.org/x/term"
 	"gotest.tools/v3/assert"
 	"gotest.tools/v3/icmd"
 
@@ -80,6 +83,7 @@ type GenericCommand struct {
 	stdin        io.Reader
 	async        bool
 	pty          bool
+	ptyWriters   []func(*os.File) error
 	timeout      time.Duration
 	workingDir   string
 
@@ -100,8 +104,9 @@ func (gc *GenericCommand) WithWrapper(binary string, args ...string) {
 	gc.helperArgs = args
 }
 
-func (gc *GenericCommand) WithPseudoTTY() {
+func (gc *GenericCommand) WithPseudoTTY(writers ...func(*os.File) error) {
 	gc.pty = true
+	gc.ptyWriters = writers
 }
 
 func (gc *GenericCommand) WithStdin(r io.Reader) {
@@ -122,29 +127,56 @@ func (gc *GenericCommand) Run(expect *Expected) {
 		gc.t.Helper()
 	}
 
-	var result *icmd.Result
+	var (
+		result *icmd.Result
+		env    []string
+		tty    *os.File
+		psty   *os.File
+	)
 
-	var env []string
+	output := &bytes.Buffer{}
+	errorGroup := &errgroup.Group{}
 
-	if gc.async {
-		result = icmd.WaitOnCmd(gc.timeout, gc.result)
-		env = gc.result.Cmd.Env
-	} else {
+	if !gc.async {
 		iCmdCmd := gc.boot()
-		env = iCmdCmd.Env
 
 		if gc.pty {
-			psty, tty, _ := pty.Open()
+			psty, tty, _ = pty.Open()
+			_, _ = term.MakeRaw(int(tty.Fd()))
+
 			iCmdCmd.Stdin = tty
 			iCmdCmd.Stdout = tty
-			iCmdCmd.Stderr = tty
 
-			defer psty.Close()
-			defer tty.Close()
+			gc.result = icmd.StartCmd(iCmdCmd)
+
+			for _, writer := range gc.ptyWriters {
+				_ = writer(psty)
+			}
+
+			// Copy from the master
+			errorGroup.Go(func() error {
+				_, _ = io.Copy(output, psty)
+
+				return nil
+			})
+		} else {
+			// Run it
+			gc.result = icmd.StartCmd(iCmdCmd)
 		}
+	}
 
-		// Run it
-		result = icmd.RunCmd(iCmdCmd)
+	result = icmd.WaitOnCmd(gc.timeout, gc.result)
+	env = gc.result.Cmd.Env
+
+	if gc.pty {
+		_ = tty.Close()
+		_ = psty.Close()
+		_ = errorGroup.Wait()
+	}
+
+	stdout := result.Stdout()
+	if stdout == "" {
+		stdout = output.String()
 	}
 
 	gc.rawStdErr = result.Stderr()
@@ -157,11 +189,14 @@ func (gc *GenericCommand) Run(expect *Expected) {
 		// ExitCode goes first
 		switch expect.ExitCode {
 		case internal.ExitCodeNoCheck:
-			// -2 means we do not care at all about exit code
+			// ExitCodeNoCheck means we do not care at all about exit code. It can be a failure, a success, or a timeout.
 		case internal.ExitCodeGenericFail:
-			// -1 means any error
+			// ExitCodeGenericFail means we expect an error (excluding timeout).
 			assert.Assert(gc.t, result.ExitCode != 0,
 				"Expected exit code to be different than 0\n"+debug)
+		case internal.ExitCodeTimeout:
+			assert.Assert(gc.t, expect.ExitCode == internal.ExitCodeTimeout,
+				"Command unexpectedly timed-out\n"+debug)
 		default:
 			assert.Assert(gc.t, expect.ExitCode == result.ExitCode,
 				fmt.Sprintf("Expected exit code: %d\n", expect.ExitCode)+debug)
@@ -175,7 +210,7 @@ func (gc *GenericCommand) Run(expect *Expected) {
 
 		// Finally, check the output if we are asked to
 		if expect.Output != nil {
-			expect.Output(result.Stdout(), debug, gc.t)
+			expect.Output(stdout, debug, gc.t)
 		}
 	}
 }

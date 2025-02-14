@@ -17,6 +17,8 @@
 package expect
 
 const (
+	ExitCodeSuccess     = 0
 	ExitCodeGenericFail = -1
 	ExitCodeNoCheck     = -2
+	ExitCodeTimeout     = -3
 )
