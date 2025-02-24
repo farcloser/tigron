@@ -40,9 +40,9 @@ jobs:
       - name: "test-unit"
         run: |
           make test-unit
-      - name: "race-unit"
+      - name: "test-unit-bench"
         run: |
-          make race-unit
-      - name: "bench-unit"
+          make test-unit-bench
+      - name: "test-unit-bench"
         run: |
-          make bench-unit
+          make test-unit-bench
