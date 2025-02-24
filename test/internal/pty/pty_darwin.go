@@ -52,7 +52,7 @@ func Open() (pty, tty *os.File, err error) {
 
 	pFD, err := syscall.Open("/dev/ptmx", syscall.O_RDWR|syscall.O_CLOEXEC, 0)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, err //nolint:wrapcheck
 	}
 
 	pty = os.NewFile(uintptr(pFD), "/dev/ptmx")
@@ -88,7 +88,7 @@ func Open() (pty, tty *os.File, err error) {
 
 	tty, err = os.OpenFile(sname, os.O_RDWR|syscall.O_NOCTTY, 0)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, err //nolint:wrapcheck
 	}
 
 	return pty, tty, nil

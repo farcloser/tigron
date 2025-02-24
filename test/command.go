@@ -117,11 +117,6 @@ func (gc *GenericCommand) WithCwd(path string) {
 	gc.workingDir = path
 }
 
-// TODO: it should be possible to timeout execution
-// Primitives (gc.timeout) is here, it is just a matter of exposing a WithTimeout method
-// - UX to be decided
-// - validate use case: would we ever need this?
-
 func (gc *GenericCommand) Run(expect *Expected) {
 	if gc.t != nil {
 		gc.t.Helper()

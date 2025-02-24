@@ -57,7 +57,8 @@ func (help *helpersInternal) Capture(args ...string) string {
 
 	help.Command(args...).Run(&Expected{
 		//nolint:thelper
-		Output: func(stdout string, _ string, _ *testing.T) {
+		Output: func(stdout string, _ string, t *testing.T) {
+			t.Helper()
 			ret = stdout
 		},
 	})
