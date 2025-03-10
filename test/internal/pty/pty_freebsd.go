@@ -14,7 +14,12 @@
    limitations under the License.
 */
 
-/*
-Package tigron is a testing framework for command-line binaries.
-*/
-package main
+package pty
+
+import (
+	"os"
+)
+
+func Open() (pty, tty *os.File, err error) {
+	return nil, nil, ErrUnsupportedPlatform
+}

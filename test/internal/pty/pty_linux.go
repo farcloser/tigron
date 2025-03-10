@@ -41,7 +41,7 @@ func Open() (pty, tty *os.File, err error) {
 	// Open the pty
 	pty, err = os.OpenFile("/dev/ptmx", os.O_RDWR, 0)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, err //nolint:wrapcheck
 	}
 
 	// Get the slave unit number
@@ -65,7 +65,7 @@ func Open() (pty, tty *os.File, err error) {
 	// Open the slave, preventing it from becoming the controlling terminal
 	tty, err = os.OpenFile(sname, os.O_RDWR|syscall.O_NOCTTY, 0)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, err //nolint:wrapcheck
 	}
 
 	return pty, tty, nil

@@ -11,7 +11,7 @@ jobs:
   lint:
     timeout-minutes: 5
     name: "${{ matrix.goos }} | ${{ matrix.goversion }}"
-    runs-on: "${{ matrix.os }}"
+    runs-on: ${{ matrix.os }}
     defaults:
       run:
         shell: bash
@@ -20,13 +20,13 @@ jobs:
         include:
           - os: ubuntu-24.04
             goos: linux
-            goversion: latest-stable
+            goversion: stable
           - os: ubuntu-24.04
             goos: windows
-            goversion: latest-stable
+            goversion: stable
           - os: ubuntu-24.04
             goos: darwin
-            goversion: latest-stable
+            goversion: stable
           - os: ubuntu-24.04
             goos: linux
             goversion: canary
@@ -38,10 +38,10 @@ jobs:
       - name: "Install golang"
         uses: ./.github/actions/install-go
         with:
-          strategy: ${{ matrix.goversion }}
+          version: ${{ matrix.goversion }}
       - name: "Install golangci"
         run: |
-          echo "::group:: make lint-install-dev-tools"
+          echo "::group:: make install-dev-tools"
           make install-dev-tools
           echo "::endgroup::"
       - name: "`make lint`"

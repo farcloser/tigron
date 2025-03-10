@@ -34,6 +34,8 @@ import (
 	"go.farcloser.world/tigron/test/internal/pty"
 )
 
+// TODO: move to icmd "go.farcloser.world/tigron/test/internal/cmd"
+
 // CustomizableCommand is an interface meant for people who want to heavily customize the base command
 // of their test case.
 type CustomizableCommand interface {
@@ -117,11 +119,6 @@ func (gc *GenericCommand) WithCwd(path string) {
 	gc.workingDir = path
 }
 
-// TODO: it should be possible to timeout execution
-// Primitives (gc.timeout) is here, it is just a matter of exposing a WithTimeout method
-// - UX to be decided
-// - validate use case: would we ever need this?
-
 func (gc *GenericCommand) Run(expect *Expected) {
 	if gc.t != nil {
 		gc.t.Helper()
@@ -135,8 +132,9 @@ func (gc *GenericCommand) Run(expect *Expected) {
 	)
 
 	output := &bytes.Buffer{}
-	errorGroup := &errgroup.Group{}
+	copyGroup := &errgroup.Group{}
 
+	//nolint:nestif
 	if !gc.async {
 		iCmdCmd := gc.boot()
 
@@ -147,18 +145,39 @@ func (gc *GenericCommand) Run(expect *Expected) {
 			iCmdCmd.Stdin = tty
 			iCmdCmd.Stdout = tty
 
-			gc.result = icmd.StartCmd(iCmdCmd)
-
-			for _, writer := range gc.ptyWriters {
-				_ = writer(psty)
-			}
-
-			// Copy from the master
-			errorGroup.Go(func() error {
+			copyGroup.Go(func() error {
 				_, _ = io.Copy(output, psty)
 
 				return nil
 			})
+
+			// Cautiously start the command
+			startGroup := &errgroup.Group{}
+			startGroup.Go(func() error {
+				gc.result = icmd.StartCmd(iCmdCmd)
+				if gc.result.Error != nil {
+					gc.t.Log("start command failed")
+					gc.t.Log(gc.result.ExitCode)
+					gc.t.Log(gc.result.Error)
+
+					return gc.result.Error
+				}
+
+				for _, writer := range gc.ptyWriters {
+					err := writer(psty)
+					if err != nil {
+						gc.t.Log("writing to the pty failed")
+						gc.t.Log(err)
+
+						return err
+					}
+				}
+
+				return nil
+			})
+
+			// Let the error through for WaitOnCmd to handle
+			_ = startGroup.Wait()
 		} else {
 			// Run it
 			gc.result = icmd.StartCmd(iCmdCmd)
@@ -171,7 +190,7 @@ func (gc *GenericCommand) Run(expect *Expected) {
 	if gc.pty {
 		_ = tty.Close()
 		_ = psty.Close()
-		_ = errorGroup.Wait()
+		_ = copyGroup.Wait()
 	}
 
 	stdout := result.Stdout()
@@ -227,6 +246,11 @@ func (gc *GenericCommand) Background(timeout time.Duration) {
 
 	gc.timeout = timeout
 	gc.result = icmd.StartCmd(i)
+}
+
+func (gc *GenericCommand) Signal(sig os.Signal) error {
+	//nolint:wrapcheck
+	return gc.result.Cmd.Process.Signal(sig)
 }
 
 func (gc *GenericCommand) withEnv(env map[string]string) {
@@ -328,7 +352,9 @@ func (gc *GenericCommand) boot() icmd.Cmd {
 	// TODO: do we really need iCmd?
 	gc.t.Log(binary, strings.Join(args, " "))
 
-	iCmdCmd := icmd.Command(binary, args...)
+	iCmdCmd := icmd.Cmd{
+		Command: append([]string{binary}, args...),
+	}
 	iCmdCmd.Env = []string{}
 
 	for _, envValue := range os.Environ() {

@@ -74,7 +74,7 @@ type Helpers interface {
 // A TestableCommand can be used as a Case Command obviously, but also as part of a Setup or Cleanup routine,
 // and as the basis of any type of helper.
 // For more powerful use-cases outside of test cases, see below CustomizableCommand.
-type TestableCommand interface {
+type TestableCommand interface { //nolint:interfacebloat
 	// WithBinary specifies what binary to execute
 	WithBinary(binary string)
 	// WithArgs specifies the args to pass to the binary. Note that WithArgs can be used multiple times and is additive.
@@ -96,6 +96,8 @@ type TestableCommand interface {
 	Run(expect *Expected)
 	// Background allows starting a command in the background
 	Background(timeout time.Duration)
+	// Signal sends a signal to a backgrounded command
+	Signal(sig os.Signal) error
 	// Stderr allows retrieving the raw stderr output of the command once it has been run
 	Stderr() string
 }

@@ -1,35 +1,36 @@
 ---
+output:
+  sort-results: true
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
 run:
-  # If it is explicitly set to 0 (i.e. not the default) then golangci-lint will automatically set the value to match Linux container CPU quota.
   concurrency: 0
   timeout: 5m
   issues-exit-code: 2
   tests: true
-  # build-tags:
-  #  - mytag
   modules-download-mode: readonly
   allow-parallel-runners: true
   allow-serial-runners: true
-  # FIXME @apostasie: it does not seem to read go.mod... so, for now, duplicating here
-  go: '1.23'
 
 linters:
   disable-all: false
   enable-all: true
   disable:
-    # I like namedreturns occasionally
-    - nonamedreturns
-    - tenv
-    # Too annoying
-    - exhaustruct  # this is fine without, usually
-    - funlen  # somewhat ridiculous
-    - cyclop  # who cares! :D
-    - godox  # just leave it alone
-    # TODO(apostasie) Temporary out until we wrap up all of them
-    - wrapcheck
+    # Opting-out
+    - nonamedreturns  # named returns are occasionally useful
+    - exhaustruct  # does not serve much of a purpose
+    - funlen  # not interested
+    - cyclop  # not interested much
+    - godox  # having these are useful
 
-    # We us go-imports instead
-    - gci
+    # Duplicating
+    - gci  # we use go-imports instead
+
+    # Deprecated
+    - tenv
 
 linters-settings:
   staticcheck:
@@ -40,6 +41,10 @@ linters-settings:
     rules:
       main:
         files:
-          - "$all"
+          - $all
         allow:
           - $gostd
+          - go.farcloser.world
+          - golang.org/x/sync/errgroup
+          - golang.org/x/term
+          - gotest.tools

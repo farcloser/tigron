@@ -52,3 +52,8 @@ TBD
 - replay debugging
 - analytics
 
+## Badges
+
+[![Go Report Card](https://goreportcard.com/badge/go.farcloser.world/tigron)](https://goreportcard.com/report/go.farcloser.world/tigron)
+![lint](https://github.com/farcloser/tigron/actions/workflows/lint.yml/badge.svg)
+![test](https://github.com/farcloser/tigron/actions/workflows/test.yml/badge.svg)
