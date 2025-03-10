@@ -41,11 +41,10 @@ linters-settings:
     rules:
       main:
         files:
-          - "$all"
+          - $all
         allow:
-          # WATCHOUT! https://github.com/OpenPeeDeeP/depguard/issues/108
           - $gostd
           - go.farcloser.world
-          - golang.org/x/sync
+          - golang.org/x/sync/errgroup
           - golang.org/x/term
           - gotest.tools

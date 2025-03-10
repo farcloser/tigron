@@ -17,4 +17,4 @@
 /*
 Package tigron is a testing framework for command-line binaries.
 */
-package tigron
+package main

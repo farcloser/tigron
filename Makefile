@@ -13,11 +13,14 @@
 #   limitations under the License.
 
 ORG_PREFIXES := "go.farcloser.world"
+ICON := "🐯"
 
 MAKEFILE_DIR := $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
-VERSION ?= $(shell git -C $(MAKEFILE_DIR) describe --match 'v[0-9]*' --dirty='.m' --always --tags)
+VERSION ?= $(shell git -C $(MAKEFILE_DIR) describe --match 'v[0-9]*' --dirty='.m' --always --tags 2>/dev/null \
+	|| echo "no_git_information")
 VERSION_TRIMMED := $(VERSION:v%=%)
-REVISION ?= $(shell git -C $(MAKEFILE_DIR) rev-parse HEAD)$(shell if ! git -C $(MAKEFILE_DIR) diff --no-ext-diff --quiet --exit-code; then echo .m; fi)
+REVISION ?= $(shell git -C $(MAKEFILE_DIR) rev-parse HEAD 2>/dev/null || echo "no_git_information")$(shell \
+	if ! git -C $(MAKEFILE_DIR) diff --no-ext-diff --quiet --exit-code 2>/dev/null; then echo .m; fi)
 LINT_COMMIT_RANGE ?= main..HEAD
 
 ifdef VERBOSE
@@ -25,7 +28,7 @@ ifdef VERBOSE
 	VERBOSE_FLAG_LONG := --verbose
 endif
 
-ifndef DC_NO_FANCY
+ifndef NO_COLOR
     NC := \033[0m
     GREEN := \033[1;32m
     ORANGE := \033[1;33m
@@ -33,26 +36,31 @@ ifndef DC_NO_FANCY
     RED := \033[1;31m
 endif
 
-# Helpers
 recursive_wildcard=$(wildcard $1$2) $(foreach e,$(wildcard $1*),$(call recursive_wildcard,$e/,$2))
 
 define title
-	@printf "$(GREEN)____________________________________________________________________________________________________\n"
-	@printf "$(GREEN)%*s\n" $$(( ( $(shell echo "🐯$(1) 🐯" | wc -c ) + 100 ) / 2 )) "🐯$(1) 🐯"
-	@printf "$(GREEN)____________________________________________________________________________________________________\n$(ORANGE)"
+	@printf "$(GREEN)____________________________________________________________________________________________________\n" 1>&2
+	@printf "$(GREEN)%*s\n" $$(( ( $(shell echo "$(ICON)$(1) $(ICON)" | wc -c ) + 100 ) / 2 )) "$(ICON)$(1) $(ICON)" 1>&2
+	@printf "$(GREEN)____________________________________________________________________________________________________\n$(ORANGE)" 1>&2
 endef
 
 define footer
-	@printf "$(GREEN)> %s: done!\n" "$(1)"
-	@printf "$(GREEN)____________________________________________________________________________________________________\n$(NC)"
+	@printf "$(GREEN)> %s: done!\n" "$(1)" 1>&2
+	@printf "$(GREEN)____________________________________________________________________________________________________\n$(NC)" 1>&2
 endef
 
 # Tasks
-lint: lint-go-all lint-imports lint-yaml lint-shell lint-commits lint-headers lint-mod lint-licenses-all
-test: test-unit test-unit-race test-unit-bench
-unit: test-unit test-unit-race test-unit-bench
+lint: lint-go-all lint-imports lint-commits lint-mod lint-licenses-all lint-headers lint-yaml lint-shell
+
 fix: fix-mod fix-imports fix-go-all
 
+test: unit
+
+unit: test-unit test-unit-race test-unit-bench
+
+##########################
+# Linting tasks
+##########################
 lint-go:
 	$(call title, $@: $(GOOS))
 	@cd $(MAKEFILE_DIR) \
@@ -63,8 +71,8 @@ lint-go-all:
 	$(call title, $@)
 	@cd $(MAKEFILE_DIR) \
 		&& GOOS=darwin make lint-go \
-		&& GOOS=linux make lint-go \
 		&& GOOS=freebsd make lint-go \
+		&& GOOS=linux make lint-go \
 		&& GOOS=windows make lint-go
 	$(call footer, $@)
 
@@ -105,21 +113,29 @@ lint-mod:
 		&& go mod tidy --diff
 	$(call footer, $@)
 
+# FIXME: go-licenses cannot find LICENSE from root of repo when submodule is imported:
+# https://github.com/google/go-licenses/issues/186
+# This is impacting gotest.tools
 lint-licenses:
 	$(call title, $@: $(GOOS))
 	@cd $(MAKEFILE_DIR) \
-		&& ./hack/make-lint-licenses.sh
+		&& go-licenses check --include_tests --allowed_licenses=Apache-2.0,BSD-2-Clause,BSD-3-Clause,MIT,MPL-2.0 \
+		  --ignore gotest.tools \
+		  ./...
 	$(call footer, $@)
 
 lint-licenses-all:
 	$(call title, $@)
 	@cd $(MAKEFILE_DIR) \
 		&& GOOS=darwin make lint-licenses \
-		&& GOOS=linux make lint-licenses \
 		&& GOOS=freebsd make lint-licenses \
+		&& GOOS=linux make lint-licenses \
 		&& GOOS=windows make lint-licenses
 	$(call footer, $@)
 
+##########################
+# Automated fixing tasks
+##########################
 fix-go:
 	$(call title, $@: $(GOOS))
 	@cd $(MAKEFILE_DIR) \
@@ -130,8 +146,8 @@ fix-go-all:
 	$(call title, $@)
 	@cd $(MAKEFILE_DIR) \
 		&& GOOS=darwin make fix-go \
-		&& GOOS=linux make fix-go \
 		&& GOOS=freebsd make fix-go \
+		&& GOOS=linux make fix-go \
 		&& GOOS=windows make fix-go
 	$(call footer, $@)
 
@@ -153,6 +169,9 @@ up:
 		&& go get -u ./...
 	$(call footer, $@)
 
+##########################
+# Development tools installation
+##########################
 install-dev-tools:
 	$(call title, $@)
 	# golangci: v1.64.5

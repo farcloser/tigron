@@ -34,6 +34,8 @@ import (
 	"go.farcloser.world/tigron/test/internal/pty"
 )
 
+// TODO: move to icmd "go.farcloser.world/tigron/test/internal/cmd"
+
 // CustomizableCommand is an interface meant for people who want to heavily customize the base command
 // of their test case.
 type CustomizableCommand interface {
@@ -132,6 +134,7 @@ func (gc *GenericCommand) Run(expect *Expected) {
 	output := &bytes.Buffer{}
 	copyGroup := &errgroup.Group{}
 
+	//nolint:nestif
 	if !gc.async {
 		iCmdCmd := gc.boot()
 
@@ -144,6 +147,7 @@ func (gc *GenericCommand) Run(expect *Expected) {
 
 			copyGroup.Go(func() error {
 				_, _ = io.Copy(output, psty)
+
 				return nil
 			})
 
@@ -155,6 +159,7 @@ func (gc *GenericCommand) Run(expect *Expected) {
 					gc.t.Log("start command failed")
 					gc.t.Log(gc.result.ExitCode)
 					gc.t.Log(gc.result.Error)
+
 					return gc.result.Error
 				}
 
@@ -163,6 +168,7 @@ func (gc *GenericCommand) Run(expect *Expected) {
 					if err != nil {
 						gc.t.Log("writing to the pty failed")
 						gc.t.Log(err)
+
 						return err
 					}
 				}
@@ -172,7 +178,6 @@ func (gc *GenericCommand) Run(expect *Expected) {
 
 			// Let the error through for WaitOnCmd to handle
 			_ = startGroup.Wait()
-
 		} else {
 			// Run it
 			gc.result = icmd.StartCmd(iCmdCmd)
@@ -347,7 +352,9 @@ func (gc *GenericCommand) boot() icmd.Cmd {
 	// TODO: do we really need iCmd?
 	gc.t.Log(binary, strings.Join(args, " "))
 
-	iCmdCmd := icmd.Command(binary, args...)
+	iCmdCmd := icmd.Cmd{
+		Command: append([]string{binary}, args...),
+	}
 	iCmdCmd.Env = []string{}
 
 	for _, envValue := range os.Environ() {

@@ -16,27 +16,25 @@ jobs:
       run:
         shell: bash
     name: unit | ${{ matrix.runner }} | ${{ matrix.goversion }}
-    runs-on: "${{ matrix.runner }}"
+    runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
       matrix:
         include:
           - runner: windows-2022
-            goversion: latest-stable
+            goversion: stable
           - runner: macos-14
-            goversion: latest-stable
+            goversion: stable
           - runner: ubuntu-24.04
-            goversion: latest-stable
+            goversion: stable
           - runner: ubuntu-24.04
             goversion: canary
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
-        with:
-          fetch-depth: 1
       - name: "Install go"
         uses: ./.github/actions/install-go
         with:
-          strategy: ${{ matrix.goversion }}
+          version: ${{ matrix.goversion }}
       - name: "test-unit"
         run: |
           make test-unit
