@@ -18,3 +18,9 @@
 Package tigron is a testing framework for command-line binaries.
 */
 package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello world")
+}
