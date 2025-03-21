@@ -16,7 +16,7 @@
 
 package internal
 
-// This is duplicated form `expect` to avoid circular imports.
+// This is duplicated from `expect` to avoid circular imports.
 const (
 	ExitCodeSuccess     = 0
 	ExitCodeGenericFail = -1
