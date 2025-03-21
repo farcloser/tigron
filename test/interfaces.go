@@ -81,11 +81,16 @@ type TestableCommand interface { //nolint:interfacebloat
 	WithArgs(args ...string)
 	// WithWrapper allows wrapping a command with another command (for example: `time`)
 	WithWrapper(binary string, args ...string)
-	WithPseudoTTY(writers ...func(*os.File) error)
-	// WithStdin allows passing a reader to be used for stdin for the command
-	WithStdin(r io.Reader)
+	// WithPseudoTTY will allocate a new pty and set the command stdin and stdout to it
+	WithPseudoTTY()
 	// WithCwd allows specifying the working directory for the command
 	WithCwd(path string)
+	// WithTimeout defines the execution timeout for a command
+	WithTimeout(timeout time.Duration)
+	// Feed allows passing a reader to be fed to the command stdin
+	Feed(r io.Reader)
+	// Feed allows passing a reader to be fed to the command stdin
+	Feeder(fun func() io.Reader)
 	// Clone returns a copy of the command
 	Clone() TestableCommand
 
@@ -95,7 +100,7 @@ type TestableCommand interface { //nolint:interfacebloat
 	// verified to be successful
 	Run(expect *Expected)
 	// Background allows starting a command in the background
-	Background(timeout time.Duration)
+	Background()
 	// Signal sends a signal to a backgrounded command
 	Signal(sig os.Signal) error
 	// Stderr allows retrieving the raw stderr output of the command once it has been run

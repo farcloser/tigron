@@ -20,7 +20,7 @@ import (
 	"slices"
 	"testing"
 
-	"gotest.tools/v3/assert"
+	"go.farcloser.world/tigron/internal/assertive"
 )
 
 // Case describes an entire test-case, including data, setup and cleanup routines, command and expectations.
@@ -69,12 +69,13 @@ func (test *Case) Run(t *testing.T) {
 	testRun := func(subT *testing.T) {
 		subT.Helper()
 
-		assert.Assert(subT, test.t == nil, "You cannot run a test multiple times")
+		assertive.True(subT, test.t == nil, "You cannot run a test multiple times")
 
 		// Attach testing.T
 		test.t = subT
-		assert.Assert(test.t, test.Description != "" || test.parent == nil, "A test description cannot be empty")
-		assert.Assert(test.t, test.Command == nil || test.Expected != nil,
+		assertive.True(test.t, test.Description != "" || test.parent == nil,
+			"A test description cannot be empty")
+		assertive.True(test.t, test.Command == nil || test.Expected != nil,
 			"Expectations for a test command cannot be nil. You may want to use Setup instead.")
 
 		// Ensure we have env
@@ -104,7 +105,7 @@ func (test *Case) Run(t *testing.T) {
 
 		var custCom CustomizableCommand
 		if registeredTestable == nil {
-			custCom = &GenericCommand{}
+			custCom = NewGenericCommand()
 		} else {
 			custCom = registeredTestable.CustomCommand(test, test.t)
 		}

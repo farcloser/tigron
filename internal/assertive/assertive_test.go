@@ -14,13 +14,35 @@
    limitations under the License.
 */
 
-package expect
+package assertive_test
 
-const (
-	ExitCodeSuccess     = 0
-	ExitCodeGenericFail = -10
-	ExitCodeNoCheck     = -11
-	ExitCodeTimeout     = -12
-	ExitCodeSignaled    = -13
-	// ExitCodeCancelled = -14.
+import (
+	"errors"
+	"fmt"
+	"testing"
+
+	"go.farcloser.world/tigron/internal/assertive"
 )
+
+func TestY(t *testing.T) {
+	t.Parallel()
+
+	var err error
+
+	assertive.ErrorIsNil(t, err)
+
+	//nolint:err113
+	someErr := errors.New("test error")
+
+	err = fmt.Errorf("wrap: %w", someErr)
+	assertive.ErrorIs(t, err, someErr)
+
+	foo := "foo"
+	assertive.IsEqual(t, foo, "foo")
+
+	bar := 10
+	assertive.IsEqual(t, bar, 10)
+
+	baz := true
+	assertive.IsEqual(t, baz, true)
+}

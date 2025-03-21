@@ -14,13 +14,35 @@
    limitations under the License.
 */
 
-package expect
+package com_test
 
-const (
-	ExitCodeSuccess     = 0
-	ExitCodeGenericFail = -10
-	ExitCodeNoCheck     = -11
-	ExitCodeTimeout     = -12
-	ExitCodeSignaled    = -13
-	// ExitCodeCancelled = -14.
+import (
+	"context"
+	"testing"
+
+	"go.farcloser.world/tigron/internal/com"
 )
+
+// FIXME: this requires go 1.24 - uncomment when go 1.23 is out of support
+// func BenchmarkCommand(b *testing.B) {
+//	for b.Loop() {
+//		cmd := com.Command{
+//			Binary: "true",
+//		}
+//
+//		_ = cmd.Run()
+//		_, _ = cmd.Wait()
+//	}
+// }
+
+func BenchmarkCommandParallel(b *testing.B) {
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			cmd := &com.Command{
+				Binary: "true",
+			}
+			_ = cmd.Run(context.Background())
+			_, _ = cmd.Wait()
+		}
+	})
+}

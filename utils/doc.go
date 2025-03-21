@@ -14,13 +14,6 @@
    limitations under the License.
 */
 
-package expect
-
-const (
-	ExitCodeSuccess     = 0
-	ExitCodeGenericFail = -10
-	ExitCodeNoCheck     = -11
-	ExitCodeTimeout     = -12
-	ExitCodeSignaled    = -13
-	// ExitCodeCancelled = -14.
-)
+// Package utils provides generic helpers that are regularly useful for a range of test authors.
+// TODO: question the usefulness of this and whether this should even be part of tigron.
+package utils

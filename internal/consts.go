@@ -14,8 +14,9 @@
    limitations under the License.
 */
 
-package expect
+package internal
 
+// This is duplicated from `expect` to avoid circular imports.
 const (
 	ExitCodeSuccess     = 0
 	ExitCodeGenericFail = -10

@@ -14,13 +14,9 @@
    limitations under the License.
 */
 
-package expect
-
-const (
-	ExitCodeSuccess     = 0
-	ExitCodeGenericFail = -10
-	ExitCodeNoCheck     = -11
-	ExitCodeTimeout     = -12
-	ExitCodeSignaled    = -13
-	// ExitCodeCancelled = -14.
-)
+// Package assertive is an experimental, zero dependencies assert library.
+// Right now, it is not public and meant to be used only inside tigron.
+// Consumers of tigron are free to use whatever assert library they want.
+// In the future, this may become public for peeps who want `assert` to be
+// bundled in.
+package assertive

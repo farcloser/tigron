@@ -1,3 +1,5 @@
+//go:build !windows
+
 /*
    Copyright Farcloser.
 
@@ -14,13 +16,22 @@
    limitations under the License.
 */
 
-package expect
+package com
 
-const (
-	ExitCodeSuccess     = 0
-	ExitCodeGenericFail = -10
-	ExitCodeNoCheck     = -11
-	ExitCodeTimeout     = -12
-	ExitCodeSignaled    = -13
-	// ExitCodeCancelled = -14.
+import (
+	"os/exec"
+	"syscall"
 )
+
+func addAttr(cmd *exec.Cmd) func() error {
+	// Default shutdown will leave child processes behind in certain circumstances
+	cmd.SysProcAttr = &syscall.SysProcAttr{
+		Setsid: true,
+	}
+
+	return func() error {
+		_ = syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
+
+		return nil
+	}
+}

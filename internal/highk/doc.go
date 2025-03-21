@@ -14,13 +14,13 @@
    limitations under the License.
 */
 
-package expect
-
-const (
-	ExitCodeSuccess     = 0
-	ExitCodeGenericFail = -10
-	ExitCodeNoCheck     = -11
-	ExitCodeTimeout     = -12
-	ExitCodeSignaled    = -13
-	// ExitCodeCancelled = -14.
-)
+// Package highk (for "high-κ dielectric") is a highly experimental leak detection library
+// (for file descriptors and go routines).
+// It is purely internal for now and used only as part of the tests for tigron.
+// TODO:
+// - get rid of lsof and implement in go
+// - figure out issues with -bench
+// - investigate feasibility of adding automatic leak detection for any test using tigron
+// - investigate feasibility of adding leak detection for tested binaries
+// - review useful of uber goroutines leak library
+package highk
