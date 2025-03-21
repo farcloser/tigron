@@ -1,3 +1,5 @@
+//go:build !windows
+
 /*
    Copyright Farcloser.
 
@@ -14,13 +16,24 @@
    limitations under the License.
 */
 
-package internal
+package com
 
-// This is duplicated from `expect` to avoid circular imports.
-const (
-	ExitCodeSuccess     = 0
-	ExitCodeGenericFail = -1
-	ExitCodeNoCheck     = -2
-	ExitCodeTimeout     = -3
-	ExitCodeCancelled   = -4
+import (
+	"os/exec"
+	"syscall"
 )
+
+func addAttr(cmd *exec.Cmd) func() error {
+	// Default shutdown will leave child processes behind in certain circumstances, so, be radical
+	cmd.SysProcAttr = &syscall.SysProcAttr{}
+	// XXX verify if / why Setpgid would not work with ptys and have a test to ensure we actually kill
+	// everything in the process group
+	// cmd.SysProcAttr.Setpgid = true
+	cmd.SysProcAttr.Setsid = true
+
+	return func() error {
+		_ = syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
+
+		return nil
+	}
+}
