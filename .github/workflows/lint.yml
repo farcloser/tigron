@@ -47,6 +47,7 @@ jobs:
       - name: "`make lint`"
         env:
           VERBOSE: true
+          NO_COLOR: true
           GOOS: ${{ matrix.goos }}
         run: |
           export LINT_COMMIT_RANGE="$(jq -r '.after + "..HEAD"' ${GITHUB_EVENT_PATH})"
