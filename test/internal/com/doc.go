@@ -14,13 +14,13 @@
    limitations under the License.
 */
 
-package internal
-
-// This is duplicated from `expect` to avoid circular imports.
-const (
-	ExitCodeSuccess     = 0
-	ExitCodeGenericFail = -1
-	ExitCodeNoCheck     = -2
-	ExitCodeTimeout     = -3
-	ExitCodeCancelled   = -4
-)
+// Package com is a lightweight wrapper around golang command execution.
+// It provides a simplified API to create commands with baked-in:
+// - timeout
+// - pty
+// - environment filtering
+// - stdin manipulation
+// - proper termination of the process group
+// - wrapping commands and prepended args
+// - (TODO) file descriptors leakage detection
+package com

@@ -14,13 +14,12 @@
    limitations under the License.
 */
 
-package internal
+package com
 
-// This is duplicated from `expect` to avoid circular imports.
-const (
-	ExitCodeSuccess     = 0
-	ExitCodeGenericFail = -1
-	ExitCodeNoCheck     = -2
-	ExitCodeTimeout     = -3
-	ExitCodeCancelled   = -4
+import (
+	"os/exec"
 )
+
+func addAttr(_ *exec.Cmd) func() error {
+	return nil
+}
