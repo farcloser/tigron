@@ -45,6 +45,9 @@ linters-settings:
         allow:
           - $gostd
           - go.farcloser.world
+          - github.com/rs/zerolog
+          - github.com/rs/zerolog/log
+          - go.uber.org/goleak
           - golang.org/x/sync/errgroup
           - golang.org/x/term
           - gotest.tools

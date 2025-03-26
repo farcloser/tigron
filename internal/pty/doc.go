@@ -14,12 +14,7 @@
    limitations under the License.
 */
 
-package internal
-
-// This is duplicated form `expect` to avoid circular imports.
-const (
-	ExitCodeSuccess     = 0
-	ExitCodeGenericFail = -1
-	ExitCodeNoCheck     = -2
-	ExitCodeTimeout     = -3
-)
+// Package pty provides a lightweight, simple, zero dependency go implementation for pseudo ttys.
+// It is not meant to be public and is here solely to serve tigron internal needs.
+// If you need a standalone pty library, do yourself a favor and use github.com/creack/pty instead.
+package pty

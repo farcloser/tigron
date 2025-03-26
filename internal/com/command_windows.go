@@ -14,13 +14,16 @@
    limitations under the License.
 */
 
-package expect
+package com
 
-const (
-	ExitCodeSuccess     = 0
-	ExitCodeGenericFail = -10
-	ExitCodeNoCheck     = -11
-	ExitCodeTimeout     = -12
-	ExitCodeSignaled    = -13
-	// ExitCodeCancelled = -14.
+import (
+	"os/exec"
 )
+
+func addAttr(_ *exec.Cmd) func() error {
+	// FIXME: remove
+	// return func() error {
+	//	return cmd.Process.Kill()
+	//}
+	return nil
+}

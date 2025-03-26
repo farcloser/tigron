@@ -19,7 +19,7 @@ package test
 import (
 	"testing"
 
-	"go.farcloser.world/tigron/test/internal"
+	"go.farcloser.world/tigron/internal"
 )
 
 // This is the implementation of Helpers

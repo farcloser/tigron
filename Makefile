@@ -190,7 +190,7 @@ install-dev-tools:
 
 test-unit:
 	$(call title, $@)
-	@go test $(VERBOSE_FLAG) $(MAKEFILE_DIR)/...
+	@EXPERIMENTAL_HIGHK_FD=true go test $(VERBOSE_FLAG) $(MAKEFILE_DIR)/...
 	$(call footer, $@)
 
 test-unit-bench:
@@ -200,7 +200,7 @@ test-unit-bench:
 
 test-unit-race:
 	$(call title, $@)
-	@go test $(VERBOSE_FLAG) $(MAKEFILE_DIR)/... -race
+	@EXPERIMENTAL_HIGHK_FD=true go test $(VERBOSE_FLAG) $(MAKEFILE_DIR)/... -race
 	$(call footer, $@)
 
 .PHONY: \

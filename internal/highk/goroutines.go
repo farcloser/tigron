@@ -14,13 +14,13 @@
    limitations under the License.
 */
 
-package expect
+//nolint:wrapcheck
+package highk
 
-const (
-	ExitCodeSuccess     = 0
-	ExitCodeGenericFail = -10
-	ExitCodeNoCheck     = -11
-	ExitCodeTimeout     = -12
-	ExitCodeSignaled    = -13
-	// ExitCodeCancelled = -14.
+import (
+	"go.uber.org/goleak"
 )
+
+func FindGoRoutines() error {
+	return goleak.Find()
+}

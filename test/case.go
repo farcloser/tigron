@@ -20,7 +20,7 @@ import (
 	"slices"
 	"testing"
 
-	"gotest.tools/v3/assert"
+	"go.farcloser.world/tigron/internal/assertive"
 )
 
 // Case describes an entire test-case, including data, setup and cleanup routines, command and expectations.
@@ -69,12 +69,13 @@ func (test *Case) Run(t *testing.T) {
 	testRun := func(subT *testing.T) {
 		subT.Helper()
 
-		assert.Assert(subT, test.t == nil, "You cannot run a test multiple times")
+		assertive.True(subT, test.t == nil, "You cannot run a test multiple times")
 
 		// Attach testing.T
 		test.t = subT
-		assert.Assert(test.t, test.Description != "" || test.parent == nil, "A test description cannot be empty")
-		assert.Assert(test.t, test.Command == nil || test.Expected != nil,
+		assertive.True(test.t, test.Description != "" || test.parent == nil,
+			"A test description cannot be empty")
+		assertive.True(test.t, test.Command == nil || test.Expected != nil,
 			"Expectations for a test command cannot be nil. You may want to use Setup instead.")
 
 		// Ensure we have env
@@ -104,7 +105,7 @@ func (test *Case) Run(t *testing.T) {
 
 		var custCom CustomizableCommand
 		if registeredTestable == nil {
-			custCom = &GenericCommand{}
+			custCom = NewGenericCommand()
 		} else {
 			custCom = registeredTestable.CustomCommand(test, test.t)
 		}
@@ -163,7 +164,6 @@ func (test *Case) Run(t *testing.T) {
 		// Execute cleanups now
 		test.t.Log("")
 		test.t.Log("======================== Pre-test cleanup ========================")
-		test.t.Log("")
 
 		for _, cleanup := range cleanups {
 			cleanup(test.Data, test.helpers)
@@ -173,7 +173,6 @@ func (test *Case) Run(t *testing.T) {
 		test.t.Cleanup(func() {
 			test.t.Log("")
 			test.t.Log("======================== Post-test cleanup ========================")
-			test.t.Log("")
 
 			slices.Reverse(cleanups)
 
@@ -185,7 +184,6 @@ func (test *Case) Run(t *testing.T) {
 		// Run the setups
 		test.t.Log("")
 		test.t.Log("======================== Test setup ========================")
-		test.t.Log("")
 
 		for _, setup := range setups {
 			setup(test.Data, test.helpers)
@@ -195,7 +193,6 @@ func (test *Case) Run(t *testing.T) {
 		// Note: if we have a command, we already know we DO have Expected
 		test.t.Log("")
 		test.t.Log("======================== Test Run ========================")
-		test.t.Log("")
 
 		if test.Command != nil {
 			test.Command(test.Data, test.helpers).Run(test.Expected(test.Data, test.helpers))
@@ -204,7 +201,6 @@ func (test *Case) Run(t *testing.T) {
 		// Now go for the subtests
 		test.t.Log("")
 		test.t.Log("======================== Processing subtests ========================")
-		test.t.Log("")
 
 		for _, subTest := range test.SubTests {
 			subTest.parent = test
