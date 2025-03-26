@@ -101,7 +101,7 @@ func TestFailRun(t *testing.T) {
 
 	err := command.Run(context.Background())
 
-	assertive.ErrorIs(t, err, com.ErrExecFailedStarting)
+	assertive.ErrorIs(t, err, com.ErrFailedStarting)
 
 	err = command.Run(context.Background())
 
@@ -109,14 +109,14 @@ func TestFailRun(t *testing.T) {
 
 	res, err := command.Wait()
 
-	assertive.ErrorIs(t, err, com.ErrExecFailedStarting)
+	assertive.ErrorIs(t, err, com.ErrFailedStarting)
 	assertive.IsEqual(t, -1, res.ExitCode)
 	assertive.IsEqual(t, "", res.Stdout)
 	assertive.IsEqual(t, "", res.Stderr)
 
 	res, err = command.Wait()
 
-	assertive.ErrorIs(t, err, com.ErrExecFailedStarting)
+	assertive.ErrorIs(t, err, com.ErrFailedStarting)
 	assertive.IsEqual(t, -1, res.ExitCode)
 	assertive.IsEqual(t, "", res.Stdout)
 	assertive.IsEqual(t, "", res.Stderr)
@@ -228,7 +228,9 @@ func TestEnvBlacklist(t *testing.T) {
 	// On windows, with mingw, SYSTEMROOT,TERM and HOME (possibly others) will be forcefully added
 	// to the environment regardless, so, we can't test "*" blacklist
 	if runtime.GOOS == windows {
-		t.Skip("Windows/mingw will always repopulate the environment with extra variables we cannot bypass")
+		t.Skip(
+			"Windows/mingw will always repopulate the environment with extra variables we cannot bypass",
+		)
 	}
 
 	command = &com.Command{
@@ -301,7 +303,8 @@ func TestTimeoutPlain(t *testing.T) {
 	start := time.Now()
 	command := &com.Command{
 		Binary: "bash",
-		// XXX unclear if windows is really able to terminate sleep 5, so, split it up to give it a chance...
+		// XXX unclear if windows is really able to terminate sleep 5, so, split it up to give it a
+		// chance...
 		Args:    []string{"-c", "--", "printf one; sleep 1; sleep 1; sleep 1; sleep 1; printf two"},
 		Timeout: 1 * time.Second,
 	}
@@ -314,7 +317,7 @@ func TestTimeoutPlain(t *testing.T) {
 
 	end := time.Now()
 
-	assertive.ErrorIs(t, err, com.ErrExecutionTimeout)
+	assertive.ErrorIs(t, err, com.ErrTimeout)
 	assertive.IsEqual(t, res.ExitCode, -1)
 	assertive.IsEqual(t, res.Stdout, "one")
 	assertive.IsEqual(t, res.Stderr, "")
@@ -327,7 +330,8 @@ func TestTimeoutDelayed(t *testing.T) {
 	start := time.Now()
 	command := &com.Command{
 		Binary: "bash",
-		// XXX unclear if windows is really able to terminate sleep 5, so, split it up to give it a chance...
+		// XXX unclear if windows is really able to terminate sleep 5, so, split it up to give it a
+		// chance...
 		Args:    []string{"-c", "--", "printf one; sleep 1; sleep 1; sleep 1; sleep 1; printf two"},
 		Timeout: 1 * time.Second,
 	}
@@ -342,7 +346,7 @@ func TestTimeoutDelayed(t *testing.T) {
 
 	end := time.Now()
 
-	assertive.ErrorIs(t, err, com.ErrExecutionTimeout)
+	assertive.ErrorIs(t, err, com.ErrTimeout)
 	assertive.IsEqual(t, res.ExitCode, -1)
 	assertive.IsEqual(t, res.Stdout, "one")
 	assertive.IsEqual(t, res.Stderr, "")
@@ -357,8 +361,12 @@ func TestPTYStdout(t *testing.T) {
 	}
 
 	command := &com.Command{
-		Binary:  "bash",
-		Args:    []string{"-c", "--", "[ -t 1 ] || { echo not a pty; exit 41; }; printf onstdout; >&2 printf onstderr;"},
+		Binary: "bash",
+		Args: []string{
+			"-c",
+			"--",
+			"[ -t 1 ] || { echo not a pty; exit 41; }; printf onstdout; >&2 printf onstderr;",
+		},
 		Timeout: 1 * time.Second,
 	}
 
@@ -384,8 +392,12 @@ func TestPTYStderr(t *testing.T) {
 	}
 
 	command := &com.Command{
-		Binary:  "bash",
-		Args:    []string{"-c", "--", "[ -t 2 ] || { echo not a pty; exit 41; }; printf onstdout; >&2 printf onstderr;"},
+		Binary: "bash",
+		Args: []string{
+			"-c",
+			"--",
+			"[ -t 2 ] || { echo not a pty; exit 41; }; printf onstdout; >&2 printf onstderr;",
+		},
 		Timeout: 1 * time.Second,
 	}
 
@@ -494,7 +506,7 @@ func TestWritePTYStdin(t *testing.T) {
 
 	res, err := command.Wait()
 
-	assertive.ErrorIs(t, err, com.ErrExecutionTimeout)
+	assertive.ErrorIs(t, err, com.ErrTimeout)
 	assertive.IsEqual(t, -1, res.ExitCode)
 	assertive.IsEqual(t, "hello firsthello worldhello again", res.Stdout)
 }
@@ -559,8 +571,11 @@ func TestSignalNormal(t *testing.T) {
 		Binary: "bash",
 		Args: []string{
 			"-c", "--",
-			fmt.Sprintf("printf entry; sig_msg () { printf \"caught\"; exit 42; }; trap sig_msg %s; "+
-				"printf set; while true; do sleep 0.1; done", strconv.Itoa(int(sig))),
+			fmt.Sprintf(
+				"printf entry; sig_msg () { printf \"caught\"; exit 42; }; trap sig_msg %s; "+
+					"printf set; while true; do sleep 0.1; done",
+				strconv.Itoa(int(sig)),
+			),
 		},
 		Timeout: 3 * time.Second,
 	}
@@ -600,7 +615,7 @@ func TestSignalNormal(t *testing.T) {
 
 	res, err = command.Wait()
 
-	assertive.ErrorIs(t, err, com.ErrExecutionSignaled)
+	assertive.ErrorIs(t, err, com.ErrSignaled)
 	assertive.IsEqual(t, res.Stdout, "")
 	assertive.IsEqual(t, res.Stderr, "")
 	assertive.IsEqual(t, res.Signal, usig)

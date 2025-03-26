@@ -52,7 +52,7 @@ endef
 # Tasks
 lint: lint-go-all lint-imports lint-commits lint-mod lint-licenses-all lint-headers lint-yaml lint-shell
 
-fix: fix-mod fix-imports fix-go-all
+fix: fix-mod fix-go-all
 
 test: unit
 
@@ -151,12 +151,6 @@ fix-go-all:
 		&& GOOS=windows make fix-go
 	$(call footer, $@)
 
-fix-imports:
-	$(call title, $@)
-	@cd $(MAKEFILE_DIR) \
-		&& goimports-reviser -company-prefixes $(ORG_PREFIXES) ./...
-	$(call footer, $@)
-
 fix-mod:
 	$(call title, $@)
 	@cd $(MAKEFILE_DIR) \
@@ -174,17 +168,15 @@ up:
 ##########################
 install-dev-tools:
 	$(call title, $@)
-	# golangci: v1.64.5
-	# git-validation: main from 2023/11
-	# ltag: v0.2.5
-	# go-licenses: v2.0.0-alpha.1
-	# goimports-reviser: v3.9.0
+	# golangci: v2.0.2 (2024-03-26)
+	# git-validation: main (2025-02-25)
+	# ltag: main (2025-03-04)
+	# go-licenses: v2.0.0-alpha.1 (2024-06-27)
 	@cd $(MAKEFILE_DIR) \
-		&& go install github.com/golangci/golangci-lint/cmd/golangci-lint@0a603e49e5e9870f5f9f2035bcbe42cd9620a9d5 \
-		&& go install github.com/vbatts/git-validation@679e5cad8c50f1605ab3d8a0a947aaf72fb24c07 \
-		&& go install github.com/kunalkushwaha/ltag@b0cfa33e4cc9383095dc584d3990b62c95096de0 \
-		&& go install github.com/google/go-licenses/v2@d01822334fba5896920a060f762ea7ecdbd086e8 \
-		&& go install github.com/incu6us/goimports-reviser/v3@698f92d226d50a01731ca8551993ebc1bb7fc788
+		&& go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@2b224c2cf4c9f261c22a16af7f8ca6408467f338 \
+		&& go install github.com/vbatts/git-validation@7b60e35b055dd2eab5844202ffffad51d9c93922 \
+		&& go install github.com/containerd/ltag@66e6a514664ee2d11a470735519fa22b1a9eaabd \
+		&& go install github.com/google/go-licenses/v2@d01822334fba5896920a060f762ea7ecdbd086e8
 	@echo "Remember to add GOROOT/bin to your path"
 	$(call footer, $@)
 
@@ -211,5 +203,5 @@ test-unit-race:
 	unit \
 	install-dev-tools \
 	lint-commits lint-go lint-go-all lint-headers lint-imports lint-licenses lint-licenses-all lint-mod lint-shell lint-yaml \
-	fix-go fix-go-all fix-imports fix-mod \
+	fix-go fix-go-all fix-mod \
 	test-unit test-unit-race test-unit-bench

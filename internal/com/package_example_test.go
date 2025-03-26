@@ -103,8 +103,12 @@ func ExampleCommand_Signal() {
 
 func ExampleCommand_WithPTY() {
 	cmd := &com.Command{
-		Binary:  "bash",
-		Args:    []string{"-c", "--", "[ -t 1 ] || { echo not a pty; exit 41; }; printf onstdout; >&2 printf onstderr;"},
+		Binary: "bash",
+		Args: []string{
+			"-c",
+			"--",
+			"[ -t 1 ] || { echo not a pty; exit 41; }; printf onstdout; >&2 printf onstderr;",
+		},
 		Timeout: 1 * time.Second,
 	}
 
@@ -188,7 +192,7 @@ func ExampleCommand_Feed() {
 	//
 }
 
-func ExampleErrExecutionTimeout() {
+func ExampleErrTimeout() {
 	cmd := &com.Command{
 		Binary:  "sleep",
 		Args:    []string{"3600"},
@@ -219,7 +223,7 @@ func ExampleErrExecutionTimeout() {
 	//
 }
 
-func ExampleErrExecFailedStarting() {
+func ExampleErrFailedStarting() {
 	cmd := &com.Command{
 		Binary: "non-existent",
 	}

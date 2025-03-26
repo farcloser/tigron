@@ -17,19 +17,25 @@
 package test
 
 type (
-	ConfigKey   string
+	// ConfigKey FIXME consider getting rid of this?
+	ConfigKey string
+	// ConfigValue FIXME consider getting rid of this?
 	ConfigValue string
 )
 
-// A Requirement offers a way to verify random conditions to decide if a test should be skipped or run.
+// A Requirement offers a way to verify random conditions to decide if a test should be skipped or
+// run.
 // It can also (optionally) provide custom Setup and Cleanup routines.
 type Requirement struct {
-	// Check is expected to verify if the requirement is fulfilled, and return a boolean and an explanatory message
+	// Check is expected to verify if the requirement is fulfilled, and return a boolean and an
+	// explanatory message
 	Check Evaluator
-	// Setup, if provided, will be run before any test-specific Setup routine, in the order that requirements
+	// Setup, if provided, will be run before any test-specific Setup routine, in the order that
+	// requirements
 	// have been declared
 	Setup Butler
-	// Cleanup, if provided, will be run after any test-specific Cleanup routine, in the reverse order that
+	// Cleanup, if provided, will be run after any test-specific Cleanup routine, in the reverse
+	// order that
 	// requirements have been declared
 	Cleanup Butler
 }

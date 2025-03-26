@@ -86,11 +86,14 @@ func TestAllSuccess(t *testing.T) {
 
 	switch runtime.GOOS {
 	case windows:
-		pass, _ = require.All(require.Not(require.Linux), require.Not(require.Darwin)).Check(nil, nil)
+		pass, _ = require.All(require.Not(require.Linux), require.Not(require.Darwin)).
+			Check(nil, nil)
 	case linux:
-		pass, _ = require.All(require.Not(require.Windows), require.Not(require.Darwin)).Check(nil, nil)
+		pass, _ = require.All(require.Not(require.Windows), require.Not(require.Darwin)).
+			Check(nil, nil)
 	case darwin:
-		pass, _ = require.All(require.Not(require.Windows), require.Not(require.Linux)).Check(nil, nil)
+		pass, _ = require.All(require.Not(require.Windows), require.Not(require.Linux)).
+			Check(nil, nil)
 	default:
 		pass, _ = require.All(require.Not(require.Windows), require.Not(require.Linux),
 			require.Not(require.Darwin)).Check(nil, nil)
@@ -106,11 +109,14 @@ func TestAllOneFail(t *testing.T) {
 
 	switch runtime.GOOS {
 	case "windows":
-		pass, _ = require.All(require.Not(require.Linux), require.Not(require.Darwin)).Check(nil, nil)
+		pass, _ = require.All(require.Not(require.Linux), require.Not(require.Darwin)).
+			Check(nil, nil)
 	case "linux":
-		pass, _ = require.All(require.Not(require.Windows), require.Not(require.Darwin)).Check(nil, nil)
+		pass, _ = require.All(require.Not(require.Windows), require.Not(require.Darwin)).
+			Check(nil, nil)
 	case "darwin":
-		pass, _ = require.All(require.Not(require.Windows), require.Not(require.Linux)).Check(nil, nil)
+		pass, _ = require.All(require.Not(require.Windows), require.Not(require.Linux)).
+			Check(nil, nil)
 	default:
 		pass, _ = require.All(require.Not(require.OS(runtime.GOOS)), require.Not(require.Linux),
 			require.Not(require.Darwin)).Check(nil, nil)

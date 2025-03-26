@@ -14,13 +14,15 @@
    limitations under the License.
 */
 
-//nolint:wrapcheck
 package highk
 
 import (
 	"go.uber.org/goleak"
 )
 
+// FindGoRoutines retrieves leaked go routines.
+//
+//nolint:wrapcheck
 func FindGoRoutines() error {
 	return goleak.Find()
 }

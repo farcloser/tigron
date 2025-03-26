@@ -39,7 +39,7 @@ func ioctlParmLen(ioctl uintptr) uintptr {
 	return (ioctl >> 16) & ioctlParamMask
 }
 
-func Open() (pty, tty *os.File, err error) {
+func open() (pty, tty *os.File, err error) {
 	defer func() {
 		if err != nil {
 			if pty != nil {
@@ -59,6 +59,7 @@ func Open() (pty, tty *os.File, err error) {
 
 	npoint := make([]byte, ioctlParmLen(syscall.TIOCPTYGNAME))
 
+	//nolint:gosec
 	err = ioctl(pty, syscall.TIOCPTYGNAME, uintptr(unsafe.Pointer(&npoint[0])))
 	if err != nil {
 		return nil, nil, err

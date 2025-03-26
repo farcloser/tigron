@@ -14,6 +14,7 @@
    limitations under the License.
 */
 
+//nolint:revive
 package test
 
 import (
@@ -32,9 +33,11 @@ import (
 
 const defaultExecutionTimeout = 3 * time.Minute
 
-// CustomizableCommand is an interface meant for people who want to heavily customize the base command
+// CustomizableCommand is an interface meant for people who want to heavily customize the base
+// command
 // of their test case.
-// FIXME: now that most of the logic got moved to the internal command, consider simplifying this / removing
+// FIXME: now that most of the logic got moved to the internal command, consider simplifying this /
+// removing
 // some of the extra layers from here
 //
 //nolint:interfacebloat
@@ -56,8 +59,9 @@ type CustomizableCommand interface {
 	// WithConfig allows passing custom config properties from the test to the base command
 	withConfig(config Config)
 	withT(t *testing.T)
-	// Clear does a clone, but will clear binary and arguments while retaining the env, or any other custom properties
-	// Gotcha: if genericCommand is embedded with a custom Run and an overridden clear to return the embedding type
+	// Clear does a clone, but will clear binary and arguments while retaining the env, or any other
+	// custom properties Gotcha: if genericCommand is embedded with a custom Run and an overridden
+	// clear to return the embedding type
 	// the result will be the embedding command, no longer the genericCommand
 	clear() TestableCommand
 
@@ -82,7 +86,7 @@ func NewGenericCommand() CustomizableCommand {
 	return genericCom
 }
 
-// genericCommand is a concrete Command implementation.
+// GenericCommand is a concrete Command implementation.
 type GenericCommand struct {
 	Config  Config
 	TempDir string
@@ -171,22 +175,56 @@ func (gc *GenericCommand) Run(expect *Expected) {
 		debugWD := gc.cmd.WorkingDir
 
 		// FIXME: this is ugly af. Do better.
-		debug := fmt.Sprintf("\n%s\n| Command:\t%s\n| Working Dir:\t%s\n| Timeout:\t%s\n%s\n"+
-			"%s\n%s\n| Stderr:\n%s\n%s\n%s\n| Stdout:\n%s\n%s\n%s\n| Exit Code: %d\n%s",
-			separator, debugCommand, debugWD, debugTimeout, separator, "\t"+strings.Join(result.Environ, "\n\t"),
-			separator, separator, result.Stderr, separator, separator, result.Stdout, separator, result.ExitCode, separator)
+		debug := fmt.Sprintf(
+			"\n%s\n| Command:\t%s\n| Working Dir:\t%s\n| Timeout:\t%s\n%s\n"+
+				"%s\n%s\n| Stderr:\n%s\n%s\n%s\n| Stdout:\n%s\n%s\n%s\n| Exit Code: %d\n%s",
+			separator,
+			debugCommand,
+			debugWD,
+			debugTimeout,
+			separator,
+			"\t"+strings.Join(result.Environ, "\n\t"),
+			separator,
+			separator,
+			result.Stderr,
+			separator,
+			separator,
+			result.Stdout,
+			separator,
+			result.ExitCode,
+			separator,
+		)
 
 		// ExitCode goes first
 		switch expect.ExitCode {
 		case internal.ExitCodeNoCheck:
 			// ExitCodeNoCheck means we do not care at all about what happened. Fire and forget...
 		case internal.ExitCodeGenericFail:
-			// ExitCodeGenericFail means we expect an error (excluding timeout, cancellation, signalling).
-			assertive.ErrorIs(gc.t, err, com.ErrExecutionFailed, "Command should have failed", debug)
+			// ExitCodeGenericFail means we expect an error (excluding timeout, cancellation,
+			// signalling).
+			assertive.ErrorIs(
+				gc.t,
+				err,
+				com.ErrExecutionFailed,
+				"Command should have failed",
+				debug,
+			)
 		case internal.ExitCodeTimeout:
-			assertive.ErrorIs(gc.t, err, com.ErrExecutionTimeout, "Command should have timed out", debug)
+			assertive.ErrorIs(
+				gc.t,
+				err,
+				com.ErrTimeout,
+				"Command should have timed out",
+				debug,
+			)
 		case internal.ExitCodeSignaled:
-			assertive.ErrorIs(gc.t, err, com.ErrExecutionSignaled, "Command should have been signalled", debug)
+			assertive.ErrorIs(
+				gc.t,
+				err,
+				com.ErrSignaled,
+				"Command should have been signalled",
+				debug,
+			)
 		case internal.ExitCodeSuccess:
 			assertive.ErrorIsNil(gc.t, err, "Command should have succeeded", debug)
 		default:

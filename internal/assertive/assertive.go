@@ -14,7 +14,6 @@
    limitations under the License.
 */
 
-//nolint:varnamelen
 package assertive
 
 import (
@@ -23,14 +22,15 @@ import (
 	"time"
 )
 
-type T interface {
+type testingT interface {
 	Helper()
 	FailNow()
 	Fail()
 	Log(args ...interface{})
 }
 
-func failNow(t T, msg ...string) {
+//nolint:varnamelen
+func failNow(t testingT, msg ...string) {
 	t.Helper()
 
 	if len(msg) > 0 {
@@ -42,7 +42,8 @@ func failNow(t T, msg ...string) {
 	t.FailNow()
 }
 
-func ErrorIsNil(t T, err error, msg ...string) {
+// ErrorIsNil immediately fails a test if err is not nil.
+func ErrorIsNil(t testingT, err error, msg ...string) {
 	t.Helper()
 
 	if err != nil {
@@ -51,7 +52,8 @@ func ErrorIsNil(t T, err error, msg ...string) {
 	}
 }
 
-func ErrorIs(t T, err error, compErr error, msg ...string) {
+// ErrorIs immediately fails a test if err is not the comparison error.
+func ErrorIs(t testingT, err, compErr error, msg ...string) {
 	t.Helper()
 
 	if !errors.Is(err, compErr) {
@@ -60,7 +62,8 @@ func ErrorIs(t T, err error, compErr error, msg ...string) {
 	}
 }
 
-func IsEqual(t T, actual, expected interface{}, msg ...string) {
+// IsEqual immediately fails a test if the two interfaces are not equal.
+func IsEqual(t testingT, actual, expected interface{}, msg ...string) {
 	t.Helper()
 
 	if !isEqual(t, actual, expected) {
@@ -69,7 +72,8 @@ func IsEqual(t T, actual, expected interface{}, msg ...string) {
 	}
 }
 
-func IsNotEqual(t T, actual, expected interface{}, msg ...string) {
+// IsNotEqual immediately fails a test if the two interfaces are equal.
+func IsNotEqual(t testingT, actual, expected interface{}, msg ...string) {
 	t.Helper()
 
 	if isEqual(t, actual, expected) {
@@ -78,19 +82,16 @@ func IsNotEqual(t T, actual, expected interface{}, msg ...string) {
 	}
 }
 
-func isEqual(t T, actual, expected interface{}) bool {
+func isEqual(t testingT, actual, expected interface{}) bool {
 	t.Helper()
 
-	truthy := false
-	// FIXME: this is risky and limited. Right now this is fine internally, but should be better if this becomes public.
-	if actual == expected {
-		truthy = true
-	}
-
-	return truthy
+	// FIXME: this is risky and limited. Right now this is fine internally, but do better if this
+	// becomes public.
+	return actual == expected
 }
 
-func StringContains(t T, actual string, contains string, msg ...string) {
+// StringContains immediately fails a test if the actual string does not contain the other string.
+func StringContains(t testingT, actual, contains string, msg ...string) {
 	t.Helper()
 
 	if !strings.Contains(actual, contains) {
@@ -99,7 +100,8 @@ func StringContains(t T, actual string, contains string, msg ...string) {
 	}
 }
 
-func StringDoesNotContain(t T, actual string, contains string, msg ...string) {
+// StringDoesNotContain immediately fails a test if the actual string contains the other string.
+func StringDoesNotContain(t testingT, actual, contains string, msg ...string) {
 	t.Helper()
 
 	if strings.Contains(actual, contains) {
@@ -108,7 +110,8 @@ func StringDoesNotContain(t T, actual string, contains string, msg ...string) {
 	}
 }
 
-func StringHasSuffix(t T, actual string, suffix string, msg ...string) {
+// StringHasSuffix immediately fails a test if the string does not end with suffix.
+func StringHasSuffix(t testingT, actual, suffix string, msg ...string) {
 	t.Helper()
 
 	if !strings.HasSuffix(actual, suffix) {
@@ -117,7 +120,8 @@ func StringHasSuffix(t T, actual string, suffix string, msg ...string) {
 	}
 }
 
-func StringHasPrefix(t T, actual string, prefix string, msg ...string) {
+// StringHasPrefix immediately fails a test if the string does not start with prefix.
+func StringHasPrefix(t testingT, actual, prefix string, msg ...string) {
 	t.Helper()
 
 	if !strings.HasPrefix(actual, prefix) {
@@ -126,7 +130,8 @@ func StringHasPrefix(t T, actual string, prefix string, msg ...string) {
 	}
 }
 
-func DurationIsLessThan(t T, actual, expected time.Duration, msg ...string) {
+// DurationIsLessThan immediately fails a test if the duration is more than the reference.
+func DurationIsLessThan(t testingT, actual, expected time.Duration, msg ...string) {
 	t.Helper()
 
 	if actual >= expected {
@@ -135,7 +140,8 @@ func DurationIsLessThan(t T, actual, expected time.Duration, msg ...string) {
 	}
 }
 
-func True(t T, comp bool, msg ...string) bool {
+// True immediately fails a test if the boolean is not true...
+func True(t testingT, comp bool, msg ...string) bool {
 	t.Helper()
 
 	if !comp {
@@ -145,7 +151,10 @@ func True(t T, comp bool, msg ...string) bool {
 	return comp
 }
 
-func Check(t T, comp bool, msg ...string) bool {
+// Check marks a test as failed if the boolean is not true (safe in go routines)
+//
+//nolint:varnamelen
+func Check(t testingT, comp bool, msg ...string) bool {
 	t.Helper()
 
 	if !comp {
