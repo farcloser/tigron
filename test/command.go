@@ -121,7 +121,7 @@ func (gc *GenericCommand) Feed(r io.Reader) {
 	gc.cmd.Feed(r)
 }
 
-func (gc *GenericCommand) Feeder(fun func() io.Reader) {
+func (gc *GenericCommand) WithFeeder(fun func() io.Reader) {
 	gc.cmd.WithFeeder(fun)
 }
 

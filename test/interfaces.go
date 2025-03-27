@@ -95,7 +95,7 @@ type TestableCommand interface { //nolint:interfacebloat
 	// Feed allows passing a reader to be fed to the command stdin
 	Feed(r io.Reader)
 	// Feed allows passing a reader to be fed to the command stdin
-	Feeder(fun func() io.Reader)
+	WithFeeder(fun func() io.Reader)
 	// Clone returns a copy of the command
 	Clone() TestableCommand
 

@@ -50,7 +50,7 @@ define footer
 endef
 
 # Tasks
-lint: lint-go-all lint-imports lint-commits lint-mod lint-licenses-all lint-headers lint-yaml lint-shell
+lint: lint-go-all lint-commits lint-mod lint-licenses-all lint-headers lint-yaml lint-shell
 
 fix: fix-mod fix-go-all
 
@@ -74,12 +74,6 @@ lint-go-all:
 		&& GOOS=freebsd make lint-go \
 		&& GOOS=linux make lint-go \
 		&& GOOS=windows make lint-go
-	$(call footer, $@)
-
-lint-imports:
-	$(call title, $@)
-	@cd $(MAKEFILE_DIR) \
-		&& goimports-reviser -recursive -list-diff -set-exit-status -output stdout -company-prefixes "$(ORG_PREFIXES)"  ./...
 	$(call footer, $@)
 
 lint-yaml:
@@ -177,7 +171,7 @@ install-dev-tools:
 		&& go install github.com/vbatts/git-validation@7b60e35b055dd2eab5844202ffffad51d9c93922 \
 		&& go install github.com/containerd/ltag@66e6a514664ee2d11a470735519fa22b1a9eaabd \
 		&& go install github.com/google/go-licenses/v2@d01822334fba5896920a060f762ea7ecdbd086e8
-	@echo "Remember to add GOROOT/bin to your path"
+	@echo "Remember to add \$$HOME/go/bin to your path"
 	$(call footer, $@)
 
 test-unit:
@@ -192,7 +186,7 @@ test-unit-bench:
 
 test-unit-race:
 	$(call title, $@)
-	@EXPERIMENTAL_HIGHK_FD=true go test $(VERBOSE_FLAG) $(MAKEFILE_DIR)/... -race
+	@EXPERIMENTAL_HIGHK_FD=true CGO_ENABLED=1 go test $(VERBOSE_FLAG) $(MAKEFILE_DIR)/... -race
 	$(call footer, $@)
 
 .PHONY: \
@@ -202,6 +196,6 @@ test-unit-race:
 	up \
 	unit \
 	install-dev-tools \
-	lint-commits lint-go lint-go-all lint-headers lint-imports lint-licenses lint-licenses-all lint-mod lint-shell lint-yaml \
+	lint-commits lint-go lint-go-all lint-headers lint-licenses lint-licenses-all lint-mod lint-shell lint-yaml \
 	fix-go fix-go-all fix-mod \
 	test-unit test-unit-race test-unit-bench
