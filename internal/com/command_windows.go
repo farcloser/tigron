@@ -21,9 +21,5 @@ import (
 )
 
 func addAttr(_ *exec.Cmd) func() error {
-	// FIXME: remove
-	// return func() error {
-	//	return cmd.Process.Kill()
-	//}
 	return nil
 }

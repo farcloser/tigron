@@ -31,9 +31,14 @@ import (
 )
 
 var (
-	ErrFailedCreatingPipe = errors.New("failed acquiring pipe")
-	ErrFailedReading      = errors.New("failed reading")
-	ErrFailedWriting      = errors.New("failed writing")
+	// ErrFailedCreating could be returned by newStdPipes() on pty creation failure.
+	ErrFailedCreating = errors.New("failed acquiring pipe")
+	// ErrFailedReading could be returned by the ioGroup in case the go routines fails to read out
+	// of a pipe.
+	ErrFailedReading = errors.New("failed reading")
+	// ErrFailedWriting could be returned by the ioGroup in case the go routines fails to write on a
+	// pipe.
+	ErrFailedWriting = errors.New("failed writing")
 )
 
 type pipe struct {
@@ -141,13 +146,13 @@ func newStdPipes(
 		if err != nil {
 			pipes.log.Error().Err(err).Msg(" x failed opening pty")
 
-			return nil, errors.Join(ErrFailedCreatingPipe, err)
+			return nil, errors.Join(ErrFailedCreating, err)
 		}
 
 		if _, err = term.MakeRaw(int(tty.Fd())); err != nil {
 			pipes.log.Error().Err(err).Msg(" x failed making pty raw")
 
-			return nil, errors.Join(ErrFailedCreatingPipe, err)
+			return nil, errors.Join(ErrFailedCreating, err)
 		}
 	}
 
@@ -165,7 +170,7 @@ func newStdPipes(
 		if err != nil {
 			pipes.log.Error().Err(err).Msg(" x failed creating pipe for stdin")
 
-			return nil, errors.Join(ErrFailedCreatingPipe, err)
+			return nil, errors.Join(ErrFailedCreating, err)
 		}
 	}
 
@@ -179,7 +184,7 @@ func newStdPipes(
 		if err != nil {
 			pipes.log.Error().Err(err).Msg(" x failed creating pipe for stdout")
 
-			return nil, errors.Join(ErrFailedCreatingPipe, err)
+			return nil, errors.Join(ErrFailedCreating, err)
 		}
 	}
 
@@ -193,7 +198,7 @@ func newStdPipes(
 		if err != nil {
 			pipes.log.Error().Err(err).Msg(" x failed creating pipe for stderr")
 
-			return nil, errors.Join(ErrFailedCreatingPipe, err)
+			return nil, errors.Join(ErrFailedCreating, err)
 		}
 	}
 

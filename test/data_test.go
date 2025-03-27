@@ -62,7 +62,9 @@ func TestDataIdentifier(t *testing.T) {
 	assertive.StringHasPrefix(t, three, "testdataidentifier-some-add-funky-prefix")
 }
 
-func TestDataIdentifierThatIsReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyLong(t *testing.T) {
+func TestDataIdentifierThatIsReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyLong(
+	t *testing.T,
+) {
 	t.Parallel()
 
 	dataObj := configureData(t, nil, nil)

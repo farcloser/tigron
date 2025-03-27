@@ -16,5 +16,6 @@
 
 // Package pty provides a lightweight, simple, zero dependency go implementation for pseudo ttys.
 // It is not meant to be public and is here solely to serve tigron internal needs.
-// If you need a standalone pty library, do yourself a favor and use github.com/creack/pty instead.
+// If you need a standalone pty library, do yourself a favor and go for github.com/creack/pty
+// instead.
 package pty

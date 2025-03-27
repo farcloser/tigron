@@ -23,14 +23,17 @@ import (
 	"go.farcloser.world/tigron/internal/assertive"
 )
 
-// Case describes an entire test-case, including data, setup and cleanup routines, command and expectations.
+// Case describes an entire test-case, including data, setup and cleanup routines, command and
+// expectations.
 type Case struct {
-	// Description contains a human-readable short desc, used as a seed for the identifier and as a title for the test
+	// Description contains a human-readable short desc, used as a seed for the identifier and as a
+	// title for the test
 	Description string
 	// NoParallel disables parallel execution if set to true
 	// This obviously implies that all tests run in parallel, by default. This is a design choice.
 	NoParallel bool
-	// Env contains a map of environment variables to use as a base for all commands run in Setup, Command and Cleanup
+	// Env contains a map of environment variables to use as a base for all commands run in Setup,
+	// Command and Cleanup
 	// Note that the environment is inherited by subtests
 	Env map[string]string
 	// Data contains test specific data, accessible to all operations, also inherited by subtests

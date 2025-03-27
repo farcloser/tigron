@@ -16,9 +16,19 @@
 
 package pty
 
-import "errors"
+import (
+	"errors"
+	"os"
+)
 
 var (
-	ErrFailure             = errors.New("pty failure")
+	// ErrFailure is wrapping system pty creation failure returned by Open().
+	ErrFailure = errors.New("pty failure")
+	// ErrUnsupportedPlatform is returned by Open() on unsupported platforms.
 	ErrUnsupportedPlatform = errors.New("pty not supported on this platform")
 )
+
+// Open will allocate and return a new pty.
+func Open() (pty, tty *os.File, err error) {
+	return open()
+}

@@ -34,7 +34,10 @@ func TestMain(m *testing.M) {
 
 	// Configure logger
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr}).With().Str("library", "tigron").Logger()
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr}).
+		With().
+		Str("library", "tigron").
+		Logger()
 
 	zerolog.SetGlobalLevel(zerolog.FatalLevel)
 

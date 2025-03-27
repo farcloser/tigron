@@ -20,6 +20,6 @@ import (
 	"os"
 )
 
-func Open() (pty, tty *os.File, err error) {
+func open() (pty, tty *os.File, err error) {
 	return nil, nil, ErrUnsupportedPlatform
 }

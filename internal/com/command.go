@@ -31,59 +31,37 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// Behavior map:
-// - a command that fails at start (not found in PATH) will return:
-//    * Run: err = ErrFaulty (ErrExecFailedStarting)
-//    * Wait: err = ErrFaulty (ErrExecFailedStarting)
-//    * ExitCode = -1
-// - a command that times-out on Wait will return:
-//    * Run: err = nil
-//    * Wait: err = ErrExecutionTimeout
-//    * ExitCode = -1
-// - a command that starts, but fails, will return:
-//    * Run: err = nil
-//    * Wait: err = ErrExecutionFailed
-//    * ExitCode = X > 0 (X is controlled by the binary being called)
-// - a command that gets interrupted by a signal (not being caught):
-//    * Run: err = nil
-//	  * Signal: err = nil
-//    * Wait: err = ErrExecutionSignaled
-//    * ExitCode = -1
-//    * Signal = the os.Signal that was sent
-// - a command that has already finished and that get sent a signal:
-// 	  * Run: err = nil
-//	  * Wait: err = nil
-//	  * Signal: err = ErrExecAlreadyFinished
-//    * ExitCode = X > 0 (X is controlled by the binary being called)
-// - a command that has already finished without Wait and that get sent a signal:
-// 	  * Run: err = nil
-//	  * Signal: err = ErrFailedSendingSignal
-//    * ExitCode = X > 0 (X is controlled by the binary being called)
-// - a command that runs normally will return:
-//    * Run: err = nil
-//    * Wait: err = nil
-//    * ExitCode = 0
-
 const (
 	defaultTimeout = 10 * time.Second
 	delayAfterWait = 100 * time.Millisecond
 )
 
 var (
-	ErrExecutionTimeout   = errors.New("command timed out")
-	ErrExecutionCancelled = errors.New("command execution cancelled")
-	ErrExecutionFailed    = errors.New("command returned a non-zero exit code")
-	ErrExecutionSignaled  = errors.New("command execution signalled")
-
-	ErrExecAlreadyStarted  = errors.New("command has already been started (double `Run`)")
-	ErrExecNotStarted      = errors.New("command has not been started (call `Run` first)")
-	ErrExecFailedStarting  = errors.New("command failed starting")
-	ErrExecAlreadyFinished = errors.New("command is already finished")
-
+	// ErrTimeout is returned by Wait() in case a command fail to complete within allocated time.
+	ErrTimeout = errors.New("command timed out")
+	// ErrFailedStarting is returned by Run() and Wait() in case a command fails to start (eg:
+	// binary missing).
+	ErrFailedStarting = errors.New("command failed starting")
+	// ErrSignaled is returned by Wait() if a signal was sent to the command while running.
+	ErrSignaled = errors.New("command execution signalled")
+	// ErrExecutionFailed is returned by Wait() when a command executes but returns a non-zero error
+	// code.
+	ErrExecutionFailed = errors.New("command returned a non-zero exit code")
 	// ErrFailedSendingSignal may happen if sending a signal to an already terminated process.
 	ErrFailedSendingSignal = errors.New("failed sending signal")
+
+	// ErrExecAlreadyStarted is a system error normally indicating a bogus double call to Run().
+	ErrExecAlreadyStarted = errors.New("command has already been started (double `Run`)")
+	// ErrExecNotStarted is a system error normally indicating that Wait() has been called without
+	// first calling Run().
+	ErrExecNotStarted = errors.New("command has not been started (call `Run` first)")
+	// ErrExecAlreadyFinished is a system error indicating a double call to Wait().
+	ErrExecAlreadyFinished = errors.New("command is already finished")
+
+	errExecutionCancelled = errors.New("command execution cancelled")
 )
 
+// Result carries the resulting output of a command once it has finished.
 type Result struct {
 	Environ  []string
 	Stdout   string
@@ -92,7 +70,7 @@ type Result struct {
 	Signal   os.Signal
 }
 
-type Execution struct {
+type execution struct {
 	//nolint:containedctx
 	context context.Context
 	cancel  context.CancelFunc
@@ -102,6 +80,7 @@ type Execution struct {
 	err     error
 }
 
+// Command is a thin wrapper on-top of golang exec.Command.
 type Command struct {
 	Binary      string
 	PrependArgs []string
@@ -121,11 +100,12 @@ type Command struct {
 	ptyStderr bool
 	ptyStdin  bool
 
-	exec   *Execution
+	exec   *execution
 	mutex  sync.Mutex
 	result *Result
 }
 
+// Clone does just duplicate a command, resetting its execution.
 func (gc *Command) Clone() *Command {
 	com := &Command{
 		Binary:      gc.Binary,
@@ -153,22 +133,36 @@ func (gc *Command) Clone() *Command {
 	return com
 }
 
-func (gc *Command) WithPTY(stdin bool, stdout bool, stderr bool) {
+// WithPTY requests that the command be executed with a pty for std streams. Parameters allow
+// showing which streams
+// are to be tied to the pty.
+// This command has no effect if Run has already been called.
+func (gc *Command) WithPTY(stdin, stdout, stderr bool) {
 	gc.ptyStdout = stdout
 	gc.ptyStderr = stderr
 	gc.ptyStdin = stdin
 }
 
+// WithFeeder ensures that the provider function will be executed and its output fed to the command
+// stdin. WithFeeder, like Feed, can be used multiple times, and writes will be performed
+// sequentially, in order.
+// This command has no effect if Run has already been called.
 func (gc *Command) WithFeeder(writers ...func() io.Reader) {
 	gc.writers = append(gc.writers, writers...)
 }
 
+// Feed ensures that the provider reader will be copied on the command stdin.
+// Feed, like WithFeeder, can be used multiple times, and writes will be performed in sequentially,
+// in order.
+// This command has no effect if Run has already been called.
 func (gc *Command) Feed(reader io.Reader) {
 	gc.writers = append(gc.writers, func() io.Reader {
 		return reader
 	})
 }
 
+// Run starts the command in the background.
+// It may error out immediately if the command fails to start (ErrFailedStarting).
 func (gc *Command) Run(parentCtx context.Context) error {
 	// Lock
 	gc.mutex.Lock()
@@ -201,7 +195,7 @@ func (gc *Command) Run(parentCtx context.Context) error {
 	cmd = gc.buildCommand(ctx)
 	logg := log.Logger.With().Ctx(ctx).Str("module", "com").Str("command", cmd.String()).Logger()
 
-	gc.exec = &Execution{
+	gc.exec = &execution{
 		context: ctx,
 		cancel:  ctxCancel,
 		command: cmd,
@@ -213,7 +207,7 @@ func (gc *Command) Run(parentCtx context.Context) error {
 	if err != nil {
 		ctxCancel()
 
-		gc.exec.err = errors.Join(ErrExecFailedStarting, err)
+		gc.exec.err = errors.Join(ErrFailedStarting, err)
 
 		// No wrapping here - we do not even have pipes, and the command has not been started.
 
@@ -231,7 +225,7 @@ func (gc *Command) Run(parentCtx context.Context) error {
 		// On failure, can the context, wrap whatever we have and return
 		gc.exec.log.Warn().Err(err).Msg("start failed")
 
-		gc.exec.err = errors.Join(ErrExecFailedStarting, err)
+		gc.exec.err = errors.Join(ErrFailedStarting, err)
 
 		_ = gc.wrap()
 
@@ -260,6 +254,7 @@ func (gc *Command) Run(parentCtx context.Context) error {
 	return nil
 }
 
+// Wait should be called after Run(), and will return the outcome of the command execution.
 func (gc *Command) Wait() (*Result, error) {
 	gc.mutex.Lock()
 	defer gc.mutex.Unlock()
@@ -291,6 +286,7 @@ func (gc *Command) Wait() (*Result, error) {
 	return gc.result, err
 }
 
+// Signal sends a signal to the command. It should be called after Run() but before Wait().
 func (gc *Command) Signal(sig os.Signal) error {
 	gc.mutex.Lock()
 	defer gc.mutex.Unlock()
@@ -325,7 +321,8 @@ func (gc *Command) wrap() error {
 		err      error
 	)
 
-	// XXXgolang: this is troubling. cmd.ProcessState.ExitCode() is always fine, even if cmd.ProcessState is nil.
+	// XXXgolang: this is troubling. cmd.ProcessState.ExitCode() is always fine, even if
+	// cmd.ProcessState is nil.
 	exitCode = cmd.ProcessState.ExitCode()
 
 	if cmd.ProcessState != nil {
@@ -336,7 +333,7 @@ func (gc *Command) wrap() error {
 
 		if status.Signaled() {
 			signal = status.Signal()
-			err = ErrExecutionSignaled
+			err = ErrSignaled
 		} else if exitCode != 0 {
 			err = ErrExecutionFailed
 		}
@@ -345,9 +342,9 @@ func (gc *Command) wrap() error {
 	// Catch-up on the context
 	switch ctx.Err() {
 	case context.DeadlineExceeded:
-		err = ErrExecutionTimeout
+		err = ErrTimeout
 	case context.Canceled:
-		err = ErrExecutionCancelled
+		err = errExecutionCancelled
 	default:
 	}
 
@@ -382,6 +379,7 @@ func (gc *Command) buildCommand(ctx context.Context) *exec.Cmd {
 		binary = gc.WrapBinary
 	}
 
+	//nolint:gosec
 	cmd := exec.CommandContext(ctx, binary, args...)
 
 	// Add dir

@@ -14,19 +14,19 @@
    limitations under the License.
 */
 
-// Package internal provides an assert library, pty, a command wrapper, and a leak detection library
-// for internal use in Tigron.
-// The objective for these is not to become generic use-cases libraries, but instead to deliver what
-// Tigron needs
-// in the simplest possible form.
-package internal
+package expect
 
-// This is duplicated from `expect` to avoid circular imports.
 const (
-	ExitCodeSuccess     = 0
+	// ExitCodeSuccess will ensure that the command effectively ran returned with exit code zero.
+	ExitCodeSuccess = 0
+	// ExitCodeGenericFail will verify that the command ran and exited with a non-zero error code.
+	// This does NOT include timeouts, cancellation, or signals.
 	ExitCodeGenericFail = -10
-	ExitCodeNoCheck     = -11
-	ExitCodeTimeout     = -12
-	ExitCodeSignaled    = -13
+	// ExitCodeNoCheck does not enforce any check at all on the function.
+	ExitCodeNoCheck = -11
+	// ExitCodeTimeout verifies that the command was cancelled on timeout.
+	ExitCodeTimeout = -12
+	// ExitCodeSignaled verifies that the command has been terminated by a signal.
+	ExitCodeSignaled = -13
 	// ExitCodeCancelled = -14.
 )
