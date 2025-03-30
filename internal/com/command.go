@@ -27,8 +27,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
+	"go.farcloser.world/tigron/internal/logger"
 )
 
 const (
@@ -43,7 +42,7 @@ var (
 	// binary missing).
 	ErrFailedStarting = errors.New("command failed starting")
 	// ErrSignaled is returned by Wait() if a signal was sent to the command while running.
-	ErrSignaled = errors.New("command execution signalled")
+	ErrSignaled = errors.New("command execution signaled")
 	// ErrExecutionFailed is returned by Wait() when a command executes but returns a non-zero error
 	// code.
 	ErrExecutionFailed = errors.New("command returned a non-zero exit code")
@@ -61,6 +60,11 @@ var (
 	errExecutionCancelled = errors.New("command execution cancelled")
 )
 
+type contextKey string
+
+// LoggerKey defines the key to attach a logger to on the context.
+const LoggerKey = contextKey("logger")
+
 // Result carries the resulting output of a command once it has finished.
 type Result struct {
 	Environ  []string
@@ -71,12 +75,12 @@ type Result struct {
 }
 
 type execution struct {
-	//nolint:containedctx
+	//nolint:containedctx // Is there a way around this?
 	context context.Context
 	cancel  context.CancelFunc
 	command *exec.Cmd
 	pipes   *stdPipes
-	log     zerolog.Logger
+	log     logger.Logger
 	err     error
 }
 
@@ -134,8 +138,7 @@ func (gc *Command) Clone() *Command {
 }
 
 // WithPTY requests that the command be executed with a pty for std streams. Parameters allow
-// showing which streams
-// are to be tied to the pty.
+// showing which streams are to be tied to the pty.
 // This command has no effect if Run has already been called.
 func (gc *Command) WithPTY(stdin, stdout, stderr bool) {
 	gc.ptyStdout = stdout
@@ -193,17 +196,31 @@ func (gc *Command) Run(parentCtx context.Context) error {
 
 	// Create a contextual command, set the logger
 	cmd = gc.buildCommand(ctx)
-	logg := log.Logger.With().Ctx(ctx).Str("module", "com").Str("command", cmd.String()).Logger()
+	// Get a debug-logger from the context
+	var (
+		log logger.Logger
+		ok  bool
+	)
+
+	if log, ok = parentCtx.Value(LoggerKey).(logger.Logger); !ok {
+		log = nil
+	}
+
+	conLog := logger.NewLogger(log).Set("command", cmd.String())
+	// FIXME: this is manual silencing of pipe logs (very noisy)
+	// It should be possible to enable this with some debug flag.
+	// Note that one probably never want this on unless they are actually debugging pipes issues...
+	emLog := logger.NewLogger(nil).Set("command", cmd.String())
 
 	gc.exec = &execution{
 		context: ctx,
 		cancel:  ctxCancel,
 		command: cmd,
-		log:     logg,
+		log:     conLog,
 	}
 
 	// Prepare pipes
-	pipes, err = newStdPipes(ctx, logg, gc.ptyStdout, gc.ptyStderr, gc.ptyStdin, gc.writers)
+	pipes, err = newStdPipes(ctx, emLog, gc.ptyStdout, gc.ptyStderr, gc.ptyStdin, gc.writers)
 	if err != nil {
 		ctxCancel()
 
@@ -223,7 +240,7 @@ func (gc *Command) Run(parentCtx context.Context) error {
 	// Start it
 	if err = cmd.Start(); err != nil {
 		// On failure, can the context, wrap whatever we have and return
-		gc.exec.log.Warn().Err(err).Msg("start failed")
+		gc.exec.log.Log("start failed", err)
 
 		gc.exec.err = errors.Join(ErrFailedStarting, err)
 
@@ -239,13 +256,11 @@ func (gc *Command) Run(parentCtx context.Context) error {
 		// There is no good reason for this to happen, so, log it
 		err = gc.wrap()
 
-		gc.exec.log.Error().
-			Err(ctx.Err()).
-			Err(err).
-			Str("stdout", gc.result.Stdout).
-			Str("stderr", gc.result.Stderr).
-			Int("exit", gc.result.ExitCode).
-			Send()
+		gc.exec.log.Log("stdout", gc.result.Stdout)
+		gc.exec.log.Log("stderr", gc.result.Stderr)
+		gc.exec.log.Log("exitcode", gc.result.ExitCode)
+		gc.exec.log.Log("err", err)
+		gc.exec.log.Log("ctxerr", ctx.Err())
 
 		return err
 	default:
@@ -328,7 +343,7 @@ func (gc *Command) wrap() error {
 	if cmd.ProcessState != nil {
 		var ok bool
 		if status, ok = cmd.ProcessState.Sys().(syscall.WaitStatus); !ok {
-			log.Panic().Msg("failed casting process state sys")
+			panic("failed casting process state sys")
 		}
 
 		if status.Signaled() {
@@ -415,7 +430,7 @@ func (gc *Command) buildCommand(ctx context.Context) *exec.Cmd {
 	// Attach platform ProcAttr and get optional custom cancellation routine
 	if cancellation := addAttr(cmd); cancellation != nil {
 		cmd.Cancel = func() error {
-			gc.exec.log.Trace().Msg("command cancelled")
+			gc.exec.log.Log("command cancelled")
 
 			// Call the platform dependent cancellation routine
 			return cancellation()

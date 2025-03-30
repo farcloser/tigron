@@ -26,7 +26,7 @@ import (
 
 // Originally from https://github.com/creack/pty/tree/2cde18bfb702199728dd43bf10a6c15c7336da0a
 
-func open() (pty, tty *os.File, err error) {
+func popen() (pty, tty *os.File, err error) {
 	// Wrap errors
 	defer func() {
 		if err != nil {

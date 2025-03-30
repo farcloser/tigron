@@ -30,5 +30,5 @@ var (
 
 // Open will allocate and return a new pty.
 func Open() (pty, tty *os.File, err error) {
-	return open()
+	return popen()
 }

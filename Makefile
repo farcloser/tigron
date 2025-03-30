@@ -12,6 +12,9 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+##########################
+# Configuration
+##########################
 ORG_PREFIXES := "go.farcloser.world"
 ICON := "🐯"
 
@@ -23,6 +26,9 @@ REVISION ?= $(shell git -C $(MAKEFILE_DIR) rev-parse HEAD 2>/dev/null || echo "n
 	if ! git -C $(MAKEFILE_DIR) diff --no-ext-diff --quiet --exit-code 2>/dev/null; then echo .m; fi)
 LINT_COMMIT_RANGE ?= main..HEAD
 
+##########################
+# Helpers
+##########################
 ifdef VERBOSE
 	VERBOSE_FLAG := -v
 	VERBOSE_FLAG_LONG := --verbose
@@ -51,11 +57,8 @@ endef
 
 # Tasks
 lint: lint-go-all lint-commits lint-mod lint-licenses-all lint-headers lint-yaml lint-shell
-
 fix: fix-mod fix-go-all
-
 test: unit
-
 unit: test-unit test-unit-race test-unit-bench
 
 ##########################
@@ -109,12 +112,10 @@ lint-mod:
 
 # FIXME: go-licenses cannot find LICENSE from root of repo when submodule is imported:
 # https://github.com/google/go-licenses/issues/186
-# This is impacting gotest.tools
 lint-licenses:
 	$(call title, $@: $(GOOS))
 	@cd $(MAKEFILE_DIR) \
 		&& go-licenses check --include_tests --allowed_licenses=Apache-2.0,BSD-2-Clause,BSD-3-Clause,MIT,MPL-2.0 \
-		  --ignore gotest.tools \
 		  ./...
 	$(call footer, $@)
 
@@ -181,7 +182,7 @@ test-unit:
 
 test-unit-bench:
 	$(call title, $@)
-	@go test $(VERBOSE_FLAG) $(MAKEFILE_DIR)/... -bench=.
+	@_HACK_WINDOWS=true go test $(VERBOSE_FLAG) $(MAKEFILE_DIR)/... -bench=.
 	$(call footer, $@)
 
 test-unit-race:

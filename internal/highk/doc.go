@@ -21,5 +21,5 @@
 // - get rid of lsof and implement in go
 // - investigate feasibility of adding automatic leak detection for any test using tigron
 // - investigate feasibility of adding leak detection for tested binaries
-// - review useful of uber goroutines leak library
+// - review usefulness of uber goroutines leak library
 package highk

@@ -28,24 +28,22 @@ type (
 // It can also (optionally) provide custom Setup and Cleanup routines.
 type Requirement struct {
 	// Check is expected to verify if the requirement is fulfilled, and return a boolean and an
-	// explanatory message
+	// explanatory message.
 	Check Evaluator
 	// Setup, if provided, will be run before any test-specific Setup routine, in the order that
-	// requirements
-	// have been declared
+	// requirements have been declared.
 	Setup Butler
 	// Cleanup, if provided, will be run after any test-specific Cleanup routine, in the reverse
-	// order that
-	// requirements have been declared
+	// order that requirements have been declared.
 	Cleanup Butler
 }
 
 // Expected expresses the expected output of a command.
 type Expected struct {
-	// ExitCode
+	// ExitCode.
 	ExitCode int
-	// Errors contains any error that (once serialized) should be seen in stderr
+	// Errors contains any error that (once serialized) should be seen in stderr.
 	Errors []error
-	// Output function to match against stdout
+	// Output function to match against stdout.
 	Output Comparator
 }

@@ -38,7 +38,7 @@ jobs:
       - name: "Setup"
         uses: ./.github/actions/node
         with:
-          go: ${{ matrix.go }}
+          go-version: ${{ matrix.go }}
       - name: "Linting"
         run: |
           export LINT_COMMIT_RANGE="$(jq -r '.after + "..HEAD"' ${GITHUB_EVENT_PATH})"
@@ -74,14 +74,14 @@ jobs:
       - name: "Install go"
         uses: ./.github/actions/install-go
         with:
-          go: ${{ matrix.go }}
+          go-version: ${{ matrix.go }}
       - name: "test-unit"
         run: |
-          # Windows does not have gcc - maybe msys2 could be worth looking into
-          [ "$RUNNER_OS" == Windows ] || make test-unit
+          make test-unit
       - name: "test-unit-race"
         run: |
-          make test-unit-race
+          # Windows does not have gcc - maybe msys2 could be worth looking into
+          [ "$RUNNER_OS" == Windows ] || make test-unit-race
       - name: "test-unit-bench"
         run: |
           make test-unit-bench
