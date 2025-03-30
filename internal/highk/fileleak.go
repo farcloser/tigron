@@ -14,7 +14,6 @@
    limitations under the License.
 */
 
-//nolint:wrapcheck
 package highk
 
 import (
@@ -27,18 +26,20 @@ import (
 	"syscall"
 )
 
-// FIXME: it seems that lsof (or go test) is leaking KQUEUE / inodes
+// FIXME: it seems that lsof (or go test) is interefering and showing false positive KQUEUE / inodes
 //
-//nolint:gochecknoglobals
+//nolint:gochecknoglobals // FIXME rewrite all of this anyhow
 var whitelist = map[string]bool{
 	"5u  KQUEUE":   true,
 	"10u  a_inode": true,
 }
 
+// SnapshotOpenFiles will capture the list of currently open-files for the process.
+//
+//nolint:wrapcheck // FIXME: work in progress
 func SnapshotOpenFiles(file *os.File) ([]byte, error) {
 	// Using a buffer would add a pipe to the list of files
 	// Reimplement this stuff in go ASAP and toss lsof instead of passing around fd
-	// defer fd.Close()
 	_, _ = file.Seek(0, 0)
 	_ = file.Truncate(0)
 
@@ -47,6 +48,7 @@ func SnapshotOpenFiles(file *os.File) ([]byte, error) {
 		return nil, err
 	}
 
+	//nolint:gosec // G204 is fine here
 	cmd := exec.Command(exe, "-nP", "-p", strconv.Itoa(syscall.Getpid()))
 	cmd.Stdout = file
 
@@ -57,7 +59,8 @@ func SnapshotOpenFiles(file *os.File) ([]byte, error) {
 	return io.ReadAll(file)
 }
 
-func Diff(one string, two string) []string {
+// Diff will return a slice of strings showing the diff between two strings.
+func Diff(one, two string) []string {
 	aone := strings.Split(one, "\n")
 	atwo := strings.Split(two, "\n")
 

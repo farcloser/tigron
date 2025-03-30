@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-// Package assertive is an experimental, zero dependencies assert library.
+// Package assertive is an experimental, zero-dependencies assert library.
 // Right now, it is not public and meant to be used only inside tigron.
 // Consumers of tigron are free to use whatever assert library they want.
 // In the future, this may become public for peeps who want `assert` to be

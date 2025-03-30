@@ -21,9 +21,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
-
 	"go.farcloser.world/tigron/internal/highk"
 )
 
@@ -32,29 +29,12 @@ func TestMain(m *testing.M) {
 	exitCode := 0
 	defer func() { os.Exit(exitCode) }()
 
-	// Configure logger
-	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr}).With().Str("library", "tigron").Logger()
-
-	zerolog.SetGlobalLevel(zerolog.FatalLevel)
-
-	switch os.Getenv("LOG_LEVEL") {
-	case "trace":
-		zerolog.SetGlobalLevel(zerolog.TraceLevel)
-	case "debug":
-		zerolog.SetGlobalLevel(zerolog.DebugLevel)
-	case "info":
-		zerolog.SetGlobalLevel(zerolog.InfoLevel)
-	default:
-		zerolog.SetGlobalLevel(zerolog.WarnLevel)
-	}
-
 	var (
 		snapFile      *os.File
 		before, after []byte
 	)
 
-	if os.Getenv("EXPERIMENTAL_HIGHK_FD") != "" {
+	if os.Getenv("HIGHK_EXPERIMENTAL_FD") != "" {
 		snapFile, _ = os.CreateTemp("", "fileleaks")
 		before, _ = highk.SnapshotOpenFiles(snapFile)
 	}
@@ -65,17 +45,15 @@ func TestMain(m *testing.M) {
 		return
 	}
 
-	if os.Getenv("EXPERIMENTAL_HIGHK_FD") != "" {
+	if os.Getenv("HIGHK_EXPERIMENTAL_FD") != "" {
 		after, _ = highk.SnapshotOpenFiles(snapFile)
 		diff := highk.Diff(string(before), string(after))
 
 		if len(diff) != 0 {
-			zerolog.SetGlobalLevel(zerolog.ErrorLevel)
-
-			log.Error().Msg("Leaking file descriptors")
+			_, _ = fmt.Fprintln(os.Stderr, "Leaking file descriptors")
 
 			for _, file := range diff {
-				log.Error().Str("file", file).Msg("leaked")
+				_, _ = fmt.Fprintln(os.Stderr, file)
 			}
 
 			exitCode = 1
@@ -83,9 +61,8 @@ func TestMain(m *testing.M) {
 	}
 
 	if err := highk.FindGoRoutines(); err != nil {
-		log.Error().Msg("Leaking go routines")
-
-		_, _ = fmt.Fprint(os.Stderr, err.Error())
+		_, _ = fmt.Fprintln(os.Stderr, "Leaking go routines")
+		_, _ = fmt.Fprintln(os.Stderr, err.Error())
 
 		exitCode = 1
 	}

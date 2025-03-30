@@ -30,16 +30,16 @@ import (
 const (
 	ioctlParamShift = 13
 	ioctlParamMask  = (1 << ioctlParamShift) - 1
+	ioctlShift      = 16
 )
 
 var errNotNULTerminated = errors.New("TIOCPTYGNAME string not NUL-terminated")
 
 func ioctlParmLen(ioctl uintptr) uintptr {
-	//nolint:mnd
-	return (ioctl >> 16) & ioctlParamMask
+	return (ioctl >> ioctlShift) & ioctlParamMask
 }
 
-func Open() (pty, tty *os.File, err error) {
+func popen() (pty, tty *os.File, err error) {
 	defer func() {
 		if err != nil {
 			if pty != nil {
@@ -59,6 +59,7 @@ func Open() (pty, tty *os.File, err error) {
 
 	npoint := make([]byte, ioctlParmLen(syscall.TIOCPTYGNAME))
 
+	//nolint:gosec
 	err = ioctl(pty, syscall.TIOCPTYGNAME, uintptr(unsafe.Pointer(&npoint[0])))
 	if err != nil {
 		return nil, nil, err

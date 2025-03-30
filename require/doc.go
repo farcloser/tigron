@@ -14,13 +14,7 @@
    limitations under the License.
 */
 
-package expect
-
-const (
-	ExitCodeSuccess     = 0
-	ExitCodeGenericFail = -10
-	ExitCodeNoCheck     = -11
-	ExitCodeTimeout     = -12
-	ExitCodeSignaled    = -13
-	// ExitCodeCancelled = -14.
-)
+// Package require provides a set of concrete test.Requirements to express the need for a specific
+// architecture,
+// OS, or binary, along with Not() and All() which allow Requirements composition.
+package require

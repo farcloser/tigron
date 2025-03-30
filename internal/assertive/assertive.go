@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-//nolint:varnamelen
+//revive:disable:add-constant,package-comments
 package assertive
 
 import (
@@ -23,138 +23,145 @@ import (
 	"time"
 )
 
-type T interface {
+type testingT interface {
 	Helper()
 	FailNow()
 	Fail()
-	Log(args ...interface{})
+	Log(args ...any)
 }
 
-func failNow(t T, msg ...string) {
-	t.Helper()
+// ErrorIsNil immediately fails a test if err is not nil.
+func ErrorIsNil(testing testingT, err error, msg ...string) {
+	testing.Helper()
+
+	if err != nil {
+		testing.Log("expecting nil error, but got:", err)
+		failNow(testing, msg...)
+	}
+}
+
+// ErrorIs immediately fails a test if err is not the comparison error.
+func ErrorIs(testing testingT, err, compErr error, msg ...string) {
+	testing.Helper()
+
+	if !errors.Is(err, compErr) {
+		testing.Log("expected error to be:", compErr, "- instead it is:", err)
+		failNow(testing, msg...)
+	}
+}
+
+// IsEqual immediately fails a test if the two interfaces are not equal.
+func IsEqual(testing testingT, actual, expected any, msg ...string) {
+	testing.Helper()
+
+	if !equal(testing, actual, expected) {
+		testing.Log("expected:", actual, " - to be equal to:", expected)
+		failNow(testing, msg...)
+	}
+}
+
+// IsNotEqual immediately fails a test if the two interfaces are equal.
+func IsNotEqual(testing testingT, actual, expected any, msg ...string) {
+	testing.Helper()
+
+	if equal(testing, actual, expected) {
+		testing.Log("expected:", actual, " - to be equal to:", expected)
+		failNow(testing, msg...)
+	}
+}
+
+// StringContains immediately fails a test if the actual string does not contain the other string.
+func StringContains(testing testingT, actual, contains string, msg ...string) {
+	testing.Helper()
+
+	if !strings.Contains(actual, contains) {
+		testing.Log("expected:", actual, " - to contain:", contains)
+		failNow(testing, msg...)
+	}
+}
+
+// StringDoesNotContain immediately fails a test if the actual string contains the other string.
+func StringDoesNotContain(testing testingT, actual, contains string, msg ...string) {
+	testing.Helper()
+
+	if strings.Contains(actual, contains) {
+		testing.Log("expected:", actual, " - to NOT contain:", contains)
+		failNow(testing, msg...)
+	}
+}
+
+// StringHasSuffix immediately fails a test if the string does not end with suffix.
+func StringHasSuffix(testing testingT, actual, suffix string, msg ...string) {
+	testing.Helper()
+
+	if !strings.HasSuffix(actual, suffix) {
+		testing.Log("expected:", actual, " - to end with:", suffix)
+		failNow(testing, msg...)
+	}
+}
+
+// StringHasPrefix immediately fails a test if the string does not start with prefix.
+func StringHasPrefix(testing testingT, actual, prefix string, msg ...string) {
+	testing.Helper()
+
+	if !strings.HasPrefix(actual, prefix) {
+		testing.Log("expected:", actual, " - to start with:", prefix)
+		failNow(testing, msg...)
+	}
+}
+
+// DurationIsLessThan immediately fails a test if the duration is more than the reference.
+func DurationIsLessThan(testing testingT, actual, expected time.Duration, msg ...string) {
+	testing.Helper()
+
+	if actual >= expected {
+		testing.Log("expected:", actual, " - to be less than:", expected)
+		failNow(testing, msg...)
+	}
+}
+
+// True immediately fails a test if the boolean is not true...
+func True(testing testingT, comp bool, msg ...string) bool {
+	testing.Helper()
+
+	if !comp {
+		failNow(testing, msg...)
+	}
+
+	return comp
+}
+
+// Check marks a test as failed if the boolean is not true (safe in go routines).
+func Check(testing testingT, comp bool, msg ...string) bool {
+	testing.Helper()
+
+	if !comp {
+		for _, m := range msg {
+			testing.Log(m)
+		}
+
+		testing.Fail()
+	}
+
+	return comp
+}
+
+func failNow(testing testingT, msg ...string) {
+	testing.Helper()
 
 	if len(msg) > 0 {
 		for _, m := range msg {
-			t.Log(m)
+			testing.Log(m)
 		}
 	}
 
-	t.FailNow()
+	testing.FailNow()
 }
 
-func ErrorIsNil(t T, err error, msg ...string) {
-	t.Helper()
+func equal(testing testingT, actual, expected any) bool {
+	testing.Helper()
 
-	if err != nil {
-		t.Log("expecting nil error, but got:", err)
-		failNow(t, msg...)
-	}
-}
-
-func ErrorIs(t T, err error, compErr error, msg ...string) {
-	t.Helper()
-
-	if !errors.Is(err, compErr) {
-		t.Log("expected error to be:", compErr, "- instead it is:", err)
-		failNow(t, msg...)
-	}
-}
-
-func IsEqual(t T, actual, expected interface{}, msg ...string) {
-	t.Helper()
-
-	if !isEqual(t, actual, expected) {
-		t.Log("expected:", actual, " - to be equal to:", expected)
-		failNow(t, msg...)
-	}
-}
-
-func IsNotEqual(t T, actual, expected interface{}, msg ...string) {
-	t.Helper()
-
-	if isEqual(t, actual, expected) {
-		t.Log("expected:", actual, " - to be equal to:", expected)
-		failNow(t, msg...)
-	}
-}
-
-func isEqual(t T, actual, expected interface{}) bool {
-	t.Helper()
-
-	truthy := false
-	// FIXME: this is risky and limited. Right now this is fine internally, but should be better if this becomes public.
-	if actual == expected {
-		truthy = true
-	}
-
-	return truthy
-}
-
-func StringContains(t T, actual string, contains string, msg ...string) {
-	t.Helper()
-
-	if !strings.Contains(actual, contains) {
-		t.Log("expected:", actual, " - to contain:", contains)
-		failNow(t, msg...)
-	}
-}
-
-func StringDoesNotContain(t T, actual string, contains string, msg ...string) {
-	t.Helper()
-
-	if strings.Contains(actual, contains) {
-		t.Log("expected:", actual, " - to NOT contain:", contains)
-		failNow(t, msg...)
-	}
-}
-
-func StringHasSuffix(t T, actual string, suffix string, msg ...string) {
-	t.Helper()
-
-	if !strings.HasSuffix(actual, suffix) {
-		t.Log("expected:", actual, " - to end with:", suffix)
-		failNow(t, msg...)
-	}
-}
-
-func StringHasPrefix(t T, actual string, prefix string, msg ...string) {
-	t.Helper()
-
-	if !strings.HasPrefix(actual, prefix) {
-		t.Log("expected:", actual, " - to start with:", prefix)
-		failNow(t, msg...)
-	}
-}
-
-func DurationIsLessThan(t T, actual, expected time.Duration, msg ...string) {
-	t.Helper()
-
-	if actual >= expected {
-		t.Log("expected:", actual, " - to be less than:", expected)
-		failNow(t, msg...)
-	}
-}
-
-func True(t T, comp bool, msg ...string) bool {
-	t.Helper()
-
-	if !comp {
-		failNow(t, msg...)
-	}
-
-	return comp
-}
-
-func Check(t T, comp bool, msg ...string) bool {
-	t.Helper()
-
-	if !comp {
-		for _, m := range msg {
-			t.Log(m)
-		}
-
-		t.Fail()
-	}
-
-	return comp
+	// FIXME: this is risky and limited. Right now this is fine internally, but do better if this
+	// becomes public.
+	return actual == expected
 }

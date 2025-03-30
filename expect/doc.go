@@ -14,36 +14,7 @@
    limitations under the License.
 */
 
-//revive:disable:add-constant
-package assertive_test
-
-import (
-	"errors"
-	"fmt"
-	"testing"
-
-	"go.farcloser.world/tigron/internal/assertive"
-)
-
-func TestY(t *testing.T) {
-	t.Parallel()
-
-	var err error
-
-	assertive.ErrorIsNil(t, err)
-
-	//nolint:err113 // Fine, this is a test
-	someErr := errors.New("test error")
-
-	err = fmt.Errorf("wrap: %w", someErr)
-	assertive.ErrorIs(t, err, someErr)
-
-	foo := "foo"
-	assertive.IsEqual(t, foo, "foo")
-
-	bar := 10
-	assertive.IsEqual(t, bar, 10)
-
-	baz := true
-	assertive.IsEqual(t, baz, true)
-}
+// Package expect provides a set of simple concrete test.Comparator implementations to use by tests
+// on stdout,
+// along with exit code expectations.
+package expect

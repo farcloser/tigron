@@ -19,8 +19,7 @@
 // It is purely internal for now and used only as part of the tests for tigron.
 // TODO:
 // - get rid of lsof and implement in go
-// - figure out issues with -bench
 // - investigate feasibility of adding automatic leak detection for any test using tigron
 // - investigate feasibility of adding leak detection for tested binaries
-// - review useful of uber goroutines leak library
+// - review usefulness of uber goroutines leak library
 package highk

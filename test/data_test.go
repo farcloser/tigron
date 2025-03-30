@@ -14,7 +14,8 @@
    limitations under the License.
 */
 
-//nolint:testpackage
+//revive:disable:add-constant
+//nolint:testpackage // We need to test some internals here
 package test
 
 import (
@@ -62,7 +63,9 @@ func TestDataIdentifier(t *testing.T) {
 	assertive.StringHasPrefix(t, three, "testdataidentifier-some-add-funky-prefix")
 }
 
-func TestDataIdentifierThatIsReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyLong(t *testing.T) {
+func TestDataIdentifierThatIsReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyLong(
+	t *testing.T,
+) {
 	t.Parallel()
 
 	dataObj := configureData(t, nil, nil)

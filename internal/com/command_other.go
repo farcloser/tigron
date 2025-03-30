@@ -27,6 +27,8 @@ func addAttr(cmd *exec.Cmd) func() error {
 	// Default shutdown will leave child processes behind in certain circumstances
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Setsid: true,
+		// FIXME: understand why we would want that
+		// Setctty: true,
 	}
 
 	return func() error {

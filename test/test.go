@@ -20,16 +20,16 @@ import (
 	"testing"
 )
 
+// Testable TODO.
 type Testable interface {
 	CustomCommand(testCase *Case, t *testing.T) CustomizableCommand
 	AmbientRequirements(testCase *Case, t *testing.T)
 }
 
-// FIXME
-//
-//nolint:gochecknoglobals
+//nolint:gochecknoglobals // FIXME get rid of this
 var registeredTestable Testable
 
+// Customize TODO.
 func Customize(testable Testable) {
 	registeredTestable = testable
 }
